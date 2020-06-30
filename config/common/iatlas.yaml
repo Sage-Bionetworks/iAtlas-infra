@@ -1,0 +1,4 @@
+template_path: common.yaml
+stack_name: iatlas-common
+dependencies:
+  - common/iatlas-vpc.yaml
