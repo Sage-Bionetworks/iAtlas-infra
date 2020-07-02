@@ -1,6 +1,6 @@
 # This creates a common set of resources of iAtlas.
 AWSTemplateFormatVersion: 2010-09-09
-Description: Essentials for iAtlas
+Description: KMS Keys for iAtlas
 Resources:
   KmsKey:
     Type: "AWS::KMS::Key"
