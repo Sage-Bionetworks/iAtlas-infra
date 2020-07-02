@@ -2,10 +2,13 @@ template_path: runner.yaml
 stack_name: iatlas-runner
 dependencies:
   - common/iatlas.yaml
-parameters:
+  - prod/iatlas-db.yaml
+  - staging/iatlas-db.yaml
+stack_tags:
   Department: "CompOnc"
   Project: "iAtlas"
   OwnerEmail: "andrew.lamb@sagebase.org"
+parameters:
   InstanceType: "t2.nano"
   VpcName: iatlasvpc
   VpcSubnet: PrivateSubnet

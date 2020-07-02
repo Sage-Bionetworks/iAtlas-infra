@@ -1,4 +1,8 @@
 template_path: common.yaml
 stack_name: iatlas-common
+stack_tags:
+  Department: "CompOnc"
+  Project: "iAtlas"
+  OwnerEmail: "andrew.lamb@sagebase.org"
 dependencies:
-  - common/iatlas-vpc.yaml
+  - common/iatlasvpc.yaml

@@ -18,15 +18,6 @@ Parameters:
     Description: Name of an existing VPC to run the instance in.
     Type: String
     Default: iatlasvpc
-  Department:
-    Description: The department for this resource (i.e. Computational Oncology)
-    Type: String
-  Project:
-    Description: The name of the project that this resource is used for (i.e. Resilience)
-    Type: String
-  OwnerEmail:
-    Description: The owner's email address for this resource (i.e. jsmith@sagebase.org)
-    Type: String
   AMIId:
     Description: ID of the AMI to deploy
     Type: AWS::EC2::Image::Id
@@ -93,7 +84,7 @@ Resources:
       Path: /
       ManagedPolicyArns:
         - !ImportValue
-          'Fn::Sub': '${AWS::Region}-essentials-ManagedInstanceRole'
+          'Fn::Sub': '${AWS::Region}-essentials-ManagedInstanceRoleArn'
         - !Ref SsmManagedPolicy
         - !Ref KmsDecryptManagedPolicy
 
@@ -122,25 +113,8 @@ Resources:
               'Fn::Sub': '${AWS::Region}-iatlasdb-staging-DBAccessSecurityGroup'
           SubnetId: !ImportValue
             'Fn::Sub': '${AWS::Region}-${VpcName}-${VpcSubnet}'
-      Tags:
-        - Key: "Name"
-          Value: !Ref 'AWS::StackName'
-        - Key: "Department"
-          Value: !Ref Department
-        - Key: "Project"
-          Value: !Ref Project
-        - Key: "OwnerEmail"
-          Value: !Ref OwnerEmail
 Outputs:
   RunnerEc2InstanceId:
     Value: !Ref RunnerEc2Instance
     Export:
       Name: !Sub '${AWS::Region}-${AWS::StackName}-Ec2InstanceId'
-  RunnerEc2InstancePrivateIp:
-    Value: !GetAtt RunnerEc2Instance.PrivateIp
-    Export:
-      Name: !Sub '${AWS::Region}-${AWS::StackName}-Ec2InstancePrivateIp'
-  OwnerEmail:
-    Value: !Ref OwnerEmail
-    Export:
-      Name: !Sub '${AWS::Region}-${AWS::StackName}-OwnerEmail'

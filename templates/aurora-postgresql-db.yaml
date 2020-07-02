@@ -28,9 +28,21 @@ Parameters:
     Description: "Instance class. Please refer to: https://docs.aws.amazon.com/documentdb/latest/developerguide/db-instance-classes.html#db-instance-classes-by-region"
     Type: "String"
     ConstraintDescription: "Instance type must be of the ones supported for the region. Please refer to: https://docs.aws.amazon.com/documentdb/latest/developerguide/db-instance-classes.html#db-instance-classes-by-region"
+    AllowedValues:
+      - db.t3.xlarge
+      - db.t3.large
+      - db.t3.medium
+      - db.t3.small
   DBEngineVersion:
     Description: 'Database engine version'
     Type: String
+    AllowedValues:
+      - 10.7
+      - 10.11
+      - 10.12
+      - 11.4
+      - 11.6
+      - 11.7
   DBPort:
     Description: TCP/IP Port for the Database Instance
     Type: Number
