@@ -142,7 +142,7 @@ Resources:
       StorageEncrypted: true
       PreferredMaintenanceWindow: "sat:06:54-sat:07:24"
       VpcSecurityGroupIds:
-        - !Ref DBAccessSecurityGroup
+#       - !Ref DBAccessSecurityGroup
         - !Ref ClusterSecurityGroup
         - !ImportValue
           'Fn::Sub': '${AWS::Region}-${VpcName}-VpnSecurityGroup'

@@ -10,7 +10,7 @@ stack_tags:
   OwnerEmail: "andrew.lamb@sagebase.org"
 parameters:
   InstanceType: "t2.nano"
-  VpcName: iastlasvpc
+  VpcName: iatlasvpc
   VpcSubnet: PrivateSubnet
   AMIId: ami-0810a318c4b1243c5 #AWS Linux from https://ami.sageit.org
-  Environment: staging
+  Environment: prod
