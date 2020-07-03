@@ -5,7 +5,7 @@ Parameters:
   InstanceType:
     Description: WebServer EC2 instance type
     Type: String
-    Default: t2.nano
+    Default: t3.nano
   VpcSubnet:
     Description: Existing VPC subnet to home the instance. Currently only private subnets allowed.
     Type: String
