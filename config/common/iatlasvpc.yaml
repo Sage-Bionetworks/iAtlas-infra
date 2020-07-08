@@ -1,0 +1,12 @@
+template_path: remote/vpc-mini.yaml
+stack_name: iatlasvpc
+stack_tags:
+  Department: "CompOnc"
+  Project: "iAtlas"
+  OwnerEmail: "andrew.lamb@sagebase.org"
+parameters:
+  VpcSubnetPrefix: "10.255.20"
+  VpcName: iatlasvpc
+hooks:
+  before_launch:
+    - !cmd "curl https://{{stack_group_config.admincentral_cf_bucket}}.s3.amazonaws.com/aws-infra/master/vpc-mini.yaml --create-dirs -o templates/remote/vpc-mini.yaml"

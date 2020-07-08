@@ -1,0 +1,188 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+  Aurora DB cluster, DB instance, and runner/jumpbox host
+Parameters:
+  VpcName:
+    Description: 'Name of an existing VPC to run the instance in'
+    Type: String
+  KmsKeyName:
+    Description: 'Encryption key to use for storage'
+    Type: String
+  MasterUsername:
+    NoEcho: "true"
+    Description: "The database admin account username"
+    Type: "String"
+    MinLength: "1"
+    MaxLength: "16"
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
+    ConstraintDescription: "Must begin with a letter and contain only alphanumeric characters."
+  MasterUserPassword:
+    NoEcho: "true"
+    Description: "The database admin account password"
+    Type: "String"
+    MinLength: "1"
+    MaxLength: "41"
+    AllowedPattern: "[a-zA-Z0-9]+"
+    ConstraintDescription: "must contain only alphanumeric characters."
+  DBInstanceClass:
+    Description: "Instance class. Please refer to: https://docs.aws.amazon.com/documentdb/latest/developerguide/db-instance-classes.html#db-instance-classes-by-region"
+    Type: "String"
+    ConstraintDescription: "Instance type must be of the ones supported for the region. Please refer to: https://docs.aws.amazon.com/documentdb/latest/developerguide/db-instance-classes.html#db-instance-classes-by-region"
+    AllowedValues:
+      - db.t3.xlarge
+      - db.t3.large
+      - db.t3.medium
+      - db.t3.small
+  DBEngineVersion:
+    Description: 'Database engine version'
+    Type: String
+    AllowedValues:
+      - 10.7
+      - 10.11
+      - 10.12
+      - 11.4
+      - 11.6
+      - 11.7
+  DBPort:
+    Description: TCP/IP Port for the Database Instance
+    Type: Number
+    Default: 5432
+    ConstraintDescription: 'Must be in the range [1115-65535]'
+    MinValue: 1115
+    MaxValue: 65535
+
+Resources:
+
+  MonitoringIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "monitoring.rds.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
+
+  DBAccessSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !ImportValue
+        'Fn::Sub': '${AWS::Region}-${VpcName}-VPCId'
+      GroupDescription: Instances with access to DB servers
+
+  ClusterSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !ImportValue
+        'Fn::Sub': '${AWS::Region}-${VpcName}-VPCId'
+      GroupDescription: DB server management and access ports
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref DBPort
+          ToPort: !Ref DBPort
+          SourceSecurityGroupId: !Ref DBAccessSecurityGroup
+          Description: 'Access from runner to DB ports'
+
+  ClusterSecurityGroupIngress:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      GroupId: !GetAtt 'ClusterSecurityGroup.GroupId'
+      IpProtocol: "-1"
+      SourceSecurityGroupId: !Ref ClusterSecurityGroup
+      Description: 'Self Reference'
+
+  DBSubnetGroup:
+    Type: AWS::DocDB::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: !Ref 'AWS::StackName'
+      SubnetIds:
+        - !ImportValue
+          'Fn::Sub': '${AWS::Region}-${VpcName}-PrivateSubnet'
+        - !ImportValue
+          'Fn::Sub': '${AWS::Region}-${VpcName}-PrivateSubnet1'
+        - !ImportValue
+          'Fn::Sub': '${AWS::Region}-${VpcName}-PrivateSubnet2'
+
+  RDSDBClusterParameterGroup:
+    Type: AWS::RDS::DBClusterParameterGroup
+    Properties:
+      Description: !Join [ "- ", [ "Aurora Parameter Group for  ", !Ref 'AWS::StackName' ] ]
+      Family: aurora-postgresql11
+      Parameters:
+        rds.force_ssl: 1
+
+  DBParameterGroup:
+    Type: AWS::RDS::DBParameterGroup
+    Properties:
+      Description: !Join [ "- ", [ "Aurora Parameter Group for  ", !Ref 'AWS::StackName' ] ]
+      Family: aurora-postgresql11
+# Currently not changing parameters from default values
+# https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Reference.html#AuroraPostgreSQL.Reference.ParameterGroups
+#     Parameters:
+
+  DBCluster:
+    Type: AWS::RDS::DBCluster
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      Engine: aurora-postgresql
+      EngineVersion: !Ref DBEngineVersion
+      Port: !Ref DBPort
+      MasterUsername: !Ref MasterUsername
+      MasterUserPassword: !Ref MasterUserPassword
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      DBClusterParameterGroupName: !Ref RDSDBClusterParameterGroup
+      StorageEncrypted: true
+      PreferredMaintenanceWindow: "sat:06:54-sat:07:24"
+      VpcSecurityGroupIds:
+#       - !Ref DBAccessSecurityGroup
+        - !Ref ClusterSecurityGroup
+        - !ImportValue
+          'Fn::Sub': '${AWS::Region}-${VpcName}-VpnSecurityGroup'
+
+  DBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref DBCluster
+      DBParameterGroupName: !Ref DBParameterGroup
+      Engine: aurora-postgresql
+      EngineVersion: !Ref DBEngineVersion
+      AutoMinorVersionUpgrade: true
+      PerformanceInsightsKMSKeyId: !Ref KmsKeyName
+      PerformanceInsightsRetentionPeriod: 365
+      PubliclyAccessible: false
+      EnablePerformanceInsights: true
+      DBInstanceClass: !Ref DBInstanceClass
+
+Outputs:
+  ClusterEndpoint:
+    Value: !GetAtt DBCluster.Endpoint.Address
+    Export:
+      Name: !Sub '${AWS::Region}-${AWS::StackName}-ClusterEndpoint.Address'
+  ClusterReadEndpoint:
+    Value: !GetAtt DBCluster.ReadEndpoint.Address
+    Export:
+      Name: !Sub '${AWS::Region}-${AWS::StackName}-ClusterReadEndpoint.Address'
+  ClusterPort:
+    Value: !GetAtt DBCluster.Endpoint.Port
+    Export:
+      Name: !Sub '${AWS::Region}-${AWS::StackName}-ClusterEndpoint.Port'
+  InstanceId:
+    Value: !Ref DBInstance
+    Export:
+      Name: !Sub '${AWS::Region}-${AWS::StackName}-InstanceId'
+  DBAccessSecurityGroup:
+    Value: !Ref DBAccessSecurityGroup
+    Export:
+      Name: !Sub '${AWS::Region}-${AWS::StackName}-DBAccessSecurityGroup'
+  ClusterSecurityGroup:
+    Value: !Ref ClusterSecurityGroup
+    Export:
+      Name: !Sub '${AWS::Region}-${AWS::StackName}-ClusterSecurityGroup'

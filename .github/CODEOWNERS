@@ -1,0 +1,8 @@
+/** @Sage-Bionetworks/sagebio-it
+
+# For creation and termination of requests which are added to config/prod
+# add other individuals who have been trained on the process here.
+config/ @Sage-Bionetworks/infra-oversight-committee
+
+# For creation and removal of templates
+templates/ @Sage-Bionetworks/infra-oversight-committee

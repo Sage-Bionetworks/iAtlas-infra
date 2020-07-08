@@ -1,0 +1,18 @@
+template_path: aurora-postgresql-db.yaml
+stack_name: iatlasdb-staging
+dependencies:
+  - common/iatlasvpc.yaml
+  - staging/iatlas-kms.yaml
+stack_tags:
+  Department: "CompOnc"
+  Project: "iAtlas"
+  OwnerEmail: "andrew.lamb@sagebase.org"
+parameters:
+  VpcName: iatlasvpc
+  KmsKeyName: "/alias/iatlas-kms-staging/KmsKey"
+  MasterUsername: !ssm /iatlas/staging/AuroraUsername
+  MasterUserPassword: !ssm /iatlas/staging/AuroraPassword
+  DBInstanceClass: "db.t3.large"
+  DBEngine: aurora-postgresql
+  DBEngineVersion: 3.2.1 #compat with PostgreSQL 11.7
+  DBPort: 5432
