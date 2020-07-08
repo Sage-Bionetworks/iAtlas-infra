@@ -1,7 +1,7 @@
 template_path: aurora-postgresql-db.yaml
 stack_name: iatlasdb-staging
 dependencies:
-  - common/iatlas.yaml
+  - common/iatlasvpc.yaml
   - staging/iatlas-kms.yaml
 stack_tags:
   Department: "CompOnc"
