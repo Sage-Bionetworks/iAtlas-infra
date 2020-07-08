@@ -21,7 +21,7 @@ Resources:
                   - ''
                   - - 'arn:aws:iam::'
                     - !Ref AWS::AccountId
-                    - ':root' 
+                    - ':root'
                 - !ImportValue us-east-1-bootstrap-CfServiceRoleArn
                 - !ImportValue us-east-1-jumpcloud-idp-ScicompAdminSamlProviderRoleArn
             Action:
@@ -47,7 +47,7 @@ Resources:
                   - ''
                   - - 'arn:aws:iam::'
                     - !Ref AWS::AccountId
-                    - ':root' 
+                    - ':root'
                 - !ImportValue us-east-1-bootstrap-CfServiceRoleArn
                 - !ImportValue us-east-1-jumpcloud-idp-ScicompAdminSamlProviderRoleArn
             Action:
