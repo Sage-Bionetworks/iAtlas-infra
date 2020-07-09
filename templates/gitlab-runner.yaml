@@ -86,6 +86,7 @@ Resources:
             Principal:
               Service:
                 - ec2.amazonaws.com
+                - ssm.amazonaws.com
             Action:
               - 'sts:AssumeRole'
       Path: /
@@ -118,6 +119,11 @@ Resources:
               'Fn::Sub': '${AWS::Region}-iatlasdb-${Environment}-DBAccessSecurityGroup'
           SubnetId: !ImportValue
             'Fn::Sub': '${AWS::Region}-${VpcName}-${VpcSubnet}'
+      Tags:
+        - Key: "ManagedInstanceMaintenanceTarget"
+          Value: "yes"
+        - Key: "PatchGroup"
+          Value: "prod-default"
 Outputs:
   RunnerEc2InstanceId:
     Value: !Ref RunnerEc2Instance
