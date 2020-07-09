@@ -10,14 +10,14 @@ config/prod launches another aurora postgresql resource, gitlab runner instance,
 ![alt text][architecture]
 
 ## Setup
-This requires secrets for database service accounts to bet set in SSM before deployment, 
+This requires secrets for database service accounts to bet set in SSM before deployment,
 at the path names: /iatlas/{staging,prod}/Aurora{Username,Password}
 
-In order to create these secrets, first deploy the {staging,prod}/iatlas-kms stacks to 
-define a KMS key to encrypt the secret strings. Adding the strings to the parameter store 
-must be done manually. 
+In order to create these secrets, first deploy the {staging,prod}/iatlas-kms stacks to
+define a KMS key to encrypt the secret strings. Adding the strings to the parameter store
+must be done manually.
 
-The GitLab runner is an EC2 instance that can use the KMS key connected to its environment 
+The GitLab runner is an EC2 instance that can use the KMS key connected to its environment
 to read secrets from the parameter store and interact with the Aurora cluster.
 
 [architecture]: infra-arch.svg "iAtlas architecture"
