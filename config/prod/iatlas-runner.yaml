@@ -1,9 +1,9 @@
-template_path: runner.yaml
-stack_name: iatlas-runner
+template_path: gitlab-runner.yaml
+stack_name: iatlas-gitlab-runner-prod
 dependencies:
-  - common/iatlas.yaml
+  - common/iatlasvpc.yaml
   - prod/iatlas-db.yaml
-  - staging/iatlas-db.yaml
+  - prod/iatlas-kms.yaml
 stack_tags:
   Department: "CompOnc"
   Project: "iAtlas"
@@ -13,3 +13,4 @@ parameters:
   VpcName: iatlasvpc
   VpcSubnet: PrivateSubnet
   AMIId: ami-0810a318c4b1243c5 #AWS Linux from https://ami.sageit.org
+  Environment: prod

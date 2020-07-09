@@ -1,6 +1,6 @@
 # This creates a common set of resources of iAtlas.
 AWSTemplateFormatVersion: 2010-09-09
-Description: Essentials for iAtlas
+Description: KMS Keys for iAtlas
 Resources:
   KmsKey:
     Type: "AWS::KMS::Key"
@@ -23,7 +23,7 @@ Resources:
                     - !Ref AWS::AccountId
                     - ':root'
                 - !ImportValue us-east-1-bootstrap-CfServiceRoleArn
-                - !ImportValue us-east-1-jumpcloud-idp-ScicompAdminSamlProviderArn
+                - !ImportValue us-east-1-jumpcloud-idp-ScicompAdminSamlProviderRoleArn
             Action:
               - "kms:Create*"
               - "kms:Describe*"
@@ -49,7 +49,7 @@ Resources:
                     - !Ref AWS::AccountId
                     - ':root'
                 - !ImportValue us-east-1-bootstrap-CfServiceRoleArn
-                - !ImportValue us-east-1-jumpcloud-idp-ScicompAdminSamlProviderArn
+                - !ImportValue us-east-1-jumpcloud-idp-ScicompAdminSamlProviderRoleArn
             Action:
               - "kms:Encrypt"
               - "kms:Decrypt"

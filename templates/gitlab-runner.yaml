@@ -5,7 +5,7 @@ Parameters:
   InstanceType:
     Description: WebServer EC2 instance type
     Type: String
-    Default: t2.nano
+    Default: t3.nano
   VpcSubnet:
     Description: Existing VPC subnet to home the instance. Currently only private subnets allowed.
     Type: String
@@ -21,6 +21,9 @@ Parameters:
   AMIId:
     Description: ID of the AMI to deploy
     Type: AWS::EC2::Image::Id
+  Environment:
+    Description: Indication of which environment this runner is associated with
+    Type: String
 
 Resources:
   # KMS Keys
@@ -41,15 +44,17 @@ Resources:
               - 'iam:ListUsers'
               - 'iam:ListRoles'
             Effect: Allow
-            Resource: !ImportValue us-east-1-iatlas-common-KmsKeyArn
+            Resource: !ImportValue
+              'Fn::Sub': '${AWS::Region}-iatlas-kms-${Environment}-KmsKeyArn'
           - Sid: DecryptAccess
             Action:
               - 'kms:Encrypt'
               - 'kms:Decrypt'
             Effect: Allow
-            Resource: !ImportValue us-east-1-iatlas-common-KmsKeyArn
+            Resource: !ImportValue
+              'Fn::Sub': '${AWS::Region}-iatlas-kms-${Environment}-KmsKeyArn'
 
-  #Allow read parameter on arn...parameter/iatlas* which includes iatlas-prod and iatlas-staging
+  #Allow read parameter on arn...parameter/iatlas/{prod,staging}/*
   SsmManagedPolicy:
     Type: "AWS::IAM::ManagedPolicy"
     Properties:
@@ -67,7 +72,9 @@ Resources:
                 - ':'
                 - !Ref AWS::AccountId
                 - ':'
-                - 'parameter/iatlas*'
+                - 'parameter/iatlas/'
+                - !Ref Environment
+                - '/*'
 
   EC2ServiceRole: #TODO will need to add roles for snapshotting DB
     Type: 'AWS::IAM::Role'
@@ -79,6 +86,7 @@ Resources:
             Principal:
               Service:
                 - ec2.amazonaws.com
+                - ssm.amazonaws.com
             Action:
               - 'sts:AssumeRole'
       Path: /
@@ -108,11 +116,14 @@ Resources:
             - !ImportValue
               'Fn::Sub': '${AWS::Region}-${VpcName}-VpnSecurityGroup'
             - !ImportValue
-              'Fn::Sub': '${AWS::Region}-iatlasdb-prod-DBAccessSecurityGroup'
-            - !ImportValue
-              'Fn::Sub': '${AWS::Region}-iatlasdb-staging-DBAccessSecurityGroup'
+              'Fn::Sub': '${AWS::Region}-iatlasdb-${Environment}-DBAccessSecurityGroup'
           SubnetId: !ImportValue
             'Fn::Sub': '${AWS::Region}-${VpcName}-${VpcSubnet}'
+      Tags:
+        - Key: "ManagedInstanceMaintenanceTarget"
+          Value: "yes"
+        - Key: "PatchGroup"
+          Value: "prod-default"
 Outputs:
   RunnerEc2InstanceId:
     Value: !Ref RunnerEc2Instance
