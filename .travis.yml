@@ -1,8 +1,10 @@
-sudo: false
 language: python
-python: 3.6
+python: 3.7
 cache: pip
-fast_finish: true
+branches:
+  only:
+  - staging
+  - prod
 install:
   - wget https://github.com/Sage-Bionetworks/infra-utils/archive/master.zip -O /tmp/infra-utils.zip
   - unzip -j -n /tmp/infra-utils.zip -x "infra-utils-master/.gitignore" "infra-utils-master/LICENSE" "infra-utils-master/*.md" "infra-utils-master/aws/*"
@@ -10,13 +12,16 @@ install:
   - pip install pre-commit sceptre sceptre-ssm-resolver
 stages:
   - name: validate
-#  - name: deploy
-#    if: branch = master AND type = push
+  - name: deploy
+    if: type = push
 jobs:
+  fast_finish: true
   include:
     - stage: validate
       script:
         - pre-commit autoupdate
         - pre-commit run --all-files
-#    - stage: deploy
-#      script: sceptre launch prod --yes
+    - stage: deploy
+      script:
+        - sceptre launch common --yes
+        - travis_wait 45 sceptre launch $TRAVIS_BRANCH --yes
