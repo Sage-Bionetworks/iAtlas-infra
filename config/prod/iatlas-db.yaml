@@ -13,5 +13,5 @@ parameters:
   MasterUsername: !ssm /iatlas/prod/AuroraUsername
   MasterUserPassword: !ssm /iatlas/prod/AuroraPassword
   DBInstanceClass: "db.t3.large"
-  DBEngineVersion: 3.2.1 #compat with PostgreSQL 11.7
+  DBEngineVersion: 3.2.2 #compat with PostgreSQL 11.7
   DBPort: "5432"
