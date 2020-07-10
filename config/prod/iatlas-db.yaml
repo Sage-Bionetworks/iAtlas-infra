@@ -15,4 +15,4 @@ parameters:
   DBInstanceClass: "db.t3.large"
   DBEngine: aurora-postgresql
   DBEngineVersion: 3.2.1 #compat with PostgreSQL 11.7
-  DBPort: 5432
+  DBPort: "5432"
