@@ -9,7 +9,7 @@ stack_tags:
   OwnerEmail: "andrew.lamb@sagebase.org"
 parameters:
   VpcName: iatlasvpc
-  KmsKeyName: !stack_output_external iatlas-kms-staging::KmsKeyArn
+  KmsKeyName: !stack_output_external iatlas-kms-staging::KmsKey
   MasterUsername: !ssm /iatlas/staging/AuroraUsername
   MasterUserPassword: !ssm /iatlas/staging/AuroraPassword
   DBInstanceClass: "db.t3.large"
