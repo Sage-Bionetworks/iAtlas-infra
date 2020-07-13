@@ -92,9 +92,10 @@ Resources:
       Path: /
       ManagedPolicyArns:
         - !ImportValue
-          'Fn::Sub': '${AWS::Region}-essentials-ManagedInstanceRoleArn'
+          'Fn::Sub': '${AWS::Region}-essentials-TagRootVolumePolicy'
         - !Ref SsmManagedPolicy
         - !Ref KmsDecryptManagedPolicy
+        - 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
 
   RunnerInstanceProfile:
     Type: 'AWS::IAM::InstanceProfile'

@@ -37,12 +37,8 @@ Parameters:
     Description: 'Database engine version'
     Type: String
     AllowedValues:
-      - 10.7
-      - 10.11
-      - 10.12
-      - 11.4
-      - 11.6
       - 11.7
+      - 11.6
   DBPort:
     Description: TCP/IP Port for the Database Instance
     Type: Number
@@ -156,7 +152,7 @@ Resources:
       EngineVersion: !Ref DBEngineVersion
       AutoMinorVersionUpgrade: true
       PerformanceInsightsKMSKeyId: !Ref KmsKeyName
-      PerformanceInsightsRetentionPeriod: 365
+      PerformanceInsightsRetentionPeriod: 7
       PubliclyAccessible: false
       EnablePerformanceInsights: true
       DBInstanceClass: !Ref DBInstanceClass
@@ -165,15 +161,15 @@ Outputs:
   ClusterEndpoint:
     Value: !GetAtt DBCluster.Endpoint.Address
     Export:
-      Name: !Sub '${AWS::Region}-${AWS::StackName}-ClusterEndpoint.Address'
+      Name: !Sub '${AWS::Region}-${AWS::StackName}-ClusterEndpointAddress'
   ClusterReadEndpoint:
     Value: !GetAtt DBCluster.ReadEndpoint.Address
     Export:
-      Name: !Sub '${AWS::Region}-${AWS::StackName}-ClusterReadEndpoint.Address'
+      Name: !Sub '${AWS::Region}-${AWS::StackName}-ClusterReadEndpointAddress'
   ClusterPort:
     Value: !GetAtt DBCluster.Endpoint.Port
     Export:
-      Name: !Sub '${AWS::Region}-${AWS::StackName}-ClusterEndpoint.Port'
+      Name: !Sub '${AWS::Region}-${AWS::StackName}-ClusterEndpointPort'
   InstanceId:
     Value: !Ref DBInstance
     Export:
