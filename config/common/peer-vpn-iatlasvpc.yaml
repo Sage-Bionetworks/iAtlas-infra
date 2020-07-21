@@ -4,8 +4,8 @@ dependencies:
   - common/iatlasvpc.yaml
 parameters:
   PeeringConnectionId: pcx-0f97213011da78981
-  VpcPrivateRouteTable: rtb-03749e8c822352561
-  VpcPublicRouteTable: rtb-0707730d3016e2737
+  VpcPrivateRouteTable: rtb-073c34d41ecd890b1
+  VpcPublicRouteTable: rtb-0455bfa65d209db45
   VpnCidr: 10.1.0.0/16
 hooks:
   before_launch:
