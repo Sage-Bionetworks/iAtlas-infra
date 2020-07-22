@@ -4,9 +4,9 @@ dependencies:
   - common/iatlasvpc.yaml
 parameters:
   PeeringConnectionId: pcx-0f97213011da78981
-  VpcPrivateRouteTable: rtb-073c34d41ecd890b1
-  VpcPublicRouteTable: rtb-0455bfa65d209db45
-  VpnCidr: 10.1.0.0/16
+  VpcPrivateRouteTable: !stack_output_external iatlasvpc::PrivateRouteTable
+  VpcPublicRouteTable: !stack_output_external iatlasvpc::PublicRouteTable
+  VpnCidr: !stack_output_external iatlasvpc::VpnCidr
 hooks:
   before_launch:
     - !cmd "curl https://s3.amazonaws.com/{{stack_group_config.admincentral_cf_bucket}}/aws-infra/master/peer-route-config.yaml --create-dirs -o templates/remote/peer-route-config.yaml"
