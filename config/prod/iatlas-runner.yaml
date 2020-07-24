@@ -14,3 +14,4 @@ parameters:
   VpcSubnet: PrivateSubnet
   AMIId: ami-0810a318c4b1243c5 #AWS Linux from https://ami.sageit.org
   Environment: prod
+  KeyName: "iatlas-gitlab-runner-prod"

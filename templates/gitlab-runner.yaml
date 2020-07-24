@@ -2,6 +2,10 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: >-
   A worker host for a GitLab runner connected to Jumpcloud
 Parameters:
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
   InstanceType:
     Description: WebServer EC2 instance type
     Type: String
@@ -109,6 +113,7 @@ Resources:
     Properties:
       ImageId: !Ref AMIId
       InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
       IamInstanceProfile: !Ref RunnerInstanceProfile
       NetworkInterfaces:
         - DeleteOnTermination: true
