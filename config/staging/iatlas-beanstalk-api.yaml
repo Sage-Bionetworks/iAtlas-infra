@@ -1,0 +1,16 @@
+template_path: ebs-iatlas-api.yaml
+stack_name: ebs-iatlas-api-staging
+# dependencies:
+#   - common/iatlasvpc.yaml
+stack_tags:
+  Department: "CompOnc"
+  Project: "iAtlas"
+  OwnerEmail: "andrew.lamb@sagebase.org"
+parameters:
+  VpcId: vpc-0adeed12976b679eb
+  Subnets: subnet-074d70c8a084d765f,subnet-0e978d6bebda35338
+  Environment: staging
+  S3Bucket: elasticbeanstalk-us-west-2-556856096938
+  S3Key: staging/Dockerrun.aws.json
+    HostKeyName: sage-iatlas-ubuntu
+    FlaskEnvironment: staging

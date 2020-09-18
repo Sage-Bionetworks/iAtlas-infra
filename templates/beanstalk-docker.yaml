@@ -1,0 +1,90 @@
+---
+    AWSTemplateFormatVersion: '2010-09-09'
+    Description: AWS CloudFormation iAtlas API Test
+    Parameters:
+      Subnets:
+        Type: CommaDelimitedList
+        Description: Subnets
+      VpcId:
+        Type: String
+        Description: VPC Id
+      S3Bucket:
+        Type: String
+        Description: S3 Bucket name
+      S3Key:
+        Type: String
+        Description: S3 Key name
+      HostKeyName:
+        Type: String
+        Description: The host SSH key to assign to instances
+      FlaskEnvironment:
+          Type: String
+          Description: The Flask configuration key to pass to the app
+          ConstraintDescription: Acceptable keys for Flask configuration 
+          AllowedValues:
+            - staging
+            - production
+    Resources:
+      iAtlasApiTest:
+        Type: AWS::ElasticBeanstalk::Application
+        Properties:
+          Description: iAtlas API Deployment
+          ApplicationVersions:
+          - VersionLabel: Initial Version
+            Description: Version 1.0
+            SourceBundle:
+              S3Bucket:
+                Ref: S3Bucket
+              S3Key:
+                Ref: S3Key
+      iAtlasTest:
+        Type: AWS::ElasticBeanstalk::Environment
+        Properties:
+          ApplicationName:
+            Ref: iAtlasApiTest
+          Description: iAtlas API Environment
+          SolutionStackName: 64bit Amazon Linux 2 v3.1.2 running Docker
+          VersionLabel: Initial Version
+          OptionSettings:
+          - Namespace: aws:ec2:vpc
+            OptionName: VPCId
+            Value: !Ref VpcId
+          - Namespace: aws:ec2:vpc
+            OptionName: Subnets
+            Value: !Ref Subnets
+          - Namespace: aws:autoscaling:launchconfiguration
+            OptionName: InstanceType
+            Value: t3a.small
+          - Namespace: aws:autoscaling:launchconfiguration
+            OptionName: IamInstanceProfile
+            Value: aws-elasticbeanstalk-ec2-role
+          - Namespace: aws:autoscaling:launchconfiguration
+            OptionName: EC2KeyName
+            Value: !Ref HostKeyName
+          - Namespace: aws:elasticbeanstalk:application:environment
+            OptionName: FLASK_ENV
+            Value: !Ref FlaskEnvironment
+          - Namespace: aws:elasticbeanstalk:application:environment
+            OptionName: POSTGRES_DB
+            Value: '{{resolve:secretsmanager:staging/RDS/iatlas_api_creds:SecretString:dbname}}'
+          - Namespace: aws:elasticbeanstalk:application:environment
+            OptionName: POSTGRES_HOST
+            Value: '{{resolve:secretsmanager:staging/RDS/iatlas_api_creds:SecretString:host}}'
+          - Namespace: aws:elasticbeanstalk:application:environment
+            OptionName: POSTGRES_USER
+            Value: '{{resolve:secretsmanager:staging/RDS/iatlas_api_creds:SecretString:username}}'
+          - Namespace: aws:elasticbeanstalk:application:environment
+            OptionName: POSTGRES_PASSWORD
+            Value: '{{resolve:secretsmanager:staging/RDS/iatlas_api_creds:SecretString:password}}'
+    Outputs:
+      URL:
+        Description: The URL of the Elastic Beanstalk environment
+        Value:
+          Fn::Join:
+          - ''
+          - - http://
+            - Fn::GetAtt:
+              - iAtlasTest
+              - EndpointURL
+            - /graphiql
+    
