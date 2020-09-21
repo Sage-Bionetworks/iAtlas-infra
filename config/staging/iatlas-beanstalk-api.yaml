@@ -1,7 +1,7 @@
-template_path: ebs-iatlas-api.yaml
+template_path: beanstalk-docker.yaml
 stack_name: ebs-iatlas-api-staging
-# dependencies:
-#   - common/iatlasvpc.yaml
+dependencies:
+  - common/iatlasvpc.yaml
 stack_tags:
   Department: "CompOnc"
   Project: "iAtlas"
@@ -12,5 +12,5 @@ parameters:
   Environment: staging
   S3Bucket: elasticbeanstalk-us-west-2-556856096938
   S3Key: staging/Dockerrun.aws.json
-    HostKeyName: sage-iatlas-ubuntu
-    FlaskEnvironment: staging
+  HostKeyName: sage-iatlas-ubuntu
+  FlaskEnvironment: staging

@@ -20,7 +20,7 @@
       FlaskEnvironment:
           Type: String
           Description: The Flask configuration key to pass to the app
-          ConstraintDescription: Acceptable keys for Flask configuration 
+          ConstraintDescription: Acceptable keys for Flask configuration
           AllowedValues:
             - staging
             - production
@@ -29,14 +29,19 @@
         Type: AWS::ElasticBeanstalk::Application
         Properties:
           Description: iAtlas API Deployment
-          ApplicationVersions:
-          - VersionLabel: Initial Version
-            Description: Version 1.0
-            SourceBundle:
-              S3Bucket:
-                Ref: S3Bucket
-              S3Key:
-                Ref: S3Key
+
+      iAtlasApiVersion:
+        Type: AWS::ElasticBeanstalk::ApplicationVersion
+        Properties:
+          ApplicationName:
+            Ref: "iAtlasApiTest"
+          Description: Latest version
+          SourceBundle:
+            S3Bucket:
+              Ref: S3Bucket
+            S3Key:
+              Ref: S3Key
+
       iAtlasTest:
         Type: AWS::ElasticBeanstalk::Environment
         Properties:
@@ -87,4 +92,3 @@
               - iAtlasTest
               - EndpointURL
             - /graphiql
-    

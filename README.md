@@ -37,7 +37,3 @@ This also assumes that a secret exists in SecretsManager that contains the RDS c
 CREATE USER iatlas_api WITH PASSWORD '<yourcomplexpasswordhere>';
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO iatlas_api;
 ```
-
-
-
-
