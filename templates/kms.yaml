@@ -48,6 +48,7 @@ Resources:
                   - - 'arn:aws:iam::'
                     - !Ref AWS::AccountId
                     - ':root'
+                - !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS'
                 - !ImportValue us-east-1-bootstrap-CfServiceRoleArn
                 - !ImportValue us-east-1-jumpcloud-idp-ScicompAdminSamlProviderRoleArn
             Action:
