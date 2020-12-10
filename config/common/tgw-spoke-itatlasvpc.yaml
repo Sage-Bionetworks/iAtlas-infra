@@ -5,7 +5,7 @@ stack_tags:
   Project: "Infrastructure"
   OwnerEmail: "it@sagebase.org"
 dependencies:
-  - "prod/iatlasvpc.yaml"
+  - "common/iatlasvpc.yaml"
 parameters:
   TransitGatewayEndpointCidr: "10.50.0.0/16"
   VpcRouteTableId: !stack_output_external iatlasvpc::PrivateRouteTable
