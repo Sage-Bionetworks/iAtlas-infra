@@ -22,8 +22,8 @@ Resources:
                   - - 'arn:aws:iam::'
                     - !Ref AWS::AccountId
                     - ':root'
-                - !ImportValue us-east-1-bootstrap-CfServiceRoleArn
-                - !ImportValue us-east-1-jumpcloud-idp-ScicompAdminSamlProviderRoleArn
+                - arn:aws:iam::556856096938:role/CfService
+                - arn:aws:iam::556856096938:role/admin_access
             Action:
               - "kms:Create*"
               - "kms:Describe*"
@@ -49,8 +49,8 @@ Resources:
                     - !Ref AWS::AccountId
                     - ':root'
                 - !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS'
-                - !ImportValue us-east-1-bootstrap-CfServiceRoleArn
-                - !ImportValue us-east-1-jumpcloud-idp-ScicompAdminSamlProviderRoleArn
+                - arn:aws:iam::556856096938:role/CfService
+                - arn:aws:iam::556856096938:role/admin_access
             Action:
               - "kms:Encrypt"
               - "kms:Decrypt"

@@ -5,7 +5,7 @@ Parameters:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS instances.
   VpcId:
     Type: AWS::EC2::VPC::Id
-    Description: Select a VPC that allows instances access to the Internet.
+    Description: A VPC to run ECS instances in.
   BastionHostSgId:
     Type: String
     Description: The ID of the security group for bastion hosts
@@ -31,13 +31,11 @@ Parameters:
     ConstraintDescription: Please choose a valid instance type.
   DockerImageTag:
     Type: String
-    Description: The Docker image tae to run
-Mappings:
-  AWSRegionToAMI:
-    us-east-1:
-      AMIID: ami-0669eafef622afea1
-    us-west-2:
-      AMIID: ami-05d33de432484ef34
+    Description: The Docker image to run
+  LatestAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-ebs'
+    Description: A reference to the latest AMI.
 Resources:
   # iAtlas API task execution IAM role
   # This is necessary so it can read the Secrets Manager entry that contains the external
@@ -220,7 +218,7 @@ Resources:
   ContainerInstances:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId: !FindInMap [AWSRegionToAMI, !Ref 'AWS::Region', AMIID]
+      ImageId: !Ref 'LatestAmiId'
       SecurityGroups: [!Ref 'EcsSecurityGroup']
       InstanceType: !Ref 'InstanceType'
       IamInstanceProfile: !Ref 'EC2InstanceProfile'
