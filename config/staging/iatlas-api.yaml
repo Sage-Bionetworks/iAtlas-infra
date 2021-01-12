@@ -1,9 +1,6 @@
 template_path: ecs.yaml
 stack_name: iatlas-staging
-stack_tags:
-  Department: "CompOnc"
-  Project: "iAtlas"
-  OwnerEmail: "andrew.lamb@sagebase.org"
+stack_tags: {{stack_group_config.stack_tags}}
 dependencies:
   - common/iatlasvpc.yaml
 parameters:

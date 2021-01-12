@@ -4,10 +4,7 @@ dependencies:
   - common/iatlasvpc.yaml
   - prod/iatlas-db.yaml
   - prod/iatlas-kms.yaml
-stack_tags:
-  Department: {{stack_group_config.department_tag}}
-  Project: {{stack_group_config.project_tag}}
-  OwnerEmail: {{stack_group_config.owner_email_tag}}
+stack_tags: {{stack_group_config.stack_tags}}
 parameters:
   InstanceType: "t2.nano"
   VpcName: iatlasvpc
