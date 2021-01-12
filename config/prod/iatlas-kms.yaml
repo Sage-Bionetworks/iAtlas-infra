@@ -1,6 +1,6 @@
 template_path: kms.yaml
 stack_name: iatlas-kms-prod
 stack_tags:
-  Department: "CompOnc"
-  Project: "iAtlas"
-  OwnerEmail: "andrew.lamb@sagebase.org"
+  Department: {{stack_group_config.department_tag}}
+  Project: {{stack_group_config.project_tag}}
+  OwnerEmail: {{stack_group_config.owner_email_tag}}
