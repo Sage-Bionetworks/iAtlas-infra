@@ -23,8 +23,11 @@ Parameters:
     Type: String
     Default: iatlasvpc
   AMIId:
-    Description: ID of the AMI to deploy
-    Type: AWS::EC2::Image::Id
+    # Description: ID of the AMI to deploy
+    # Type: AWS::EC2::Image::Id
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-ebs'
+    Description: A reference to the latest AMI.
   Environment:
     Description: Indication of which environment this runner is associated with
     Type: String
@@ -95,8 +98,9 @@ Resources:
               - 'sts:AssumeRole'
       Path: /
       ManagedPolicyArns:
-        - !ImportValue
-          'Fn::Sub': '${AWS::Region}-essentials-TagRootVolumePolicy'
+        # - !ImportValue
+        #   'Fn::Sub': '${AWS::Region}-essentials-TagRootVolumePolicy'
+        - 'arn:aws:iam::556856096938:policy/CfService'
         - !Ref SsmManagedPolicy
         - !Ref KmsDecryptManagedPolicy
         - 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'

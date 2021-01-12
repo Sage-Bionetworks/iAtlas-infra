@@ -4,7 +4,7 @@ dependencies:
   - common/iatlasvpc.yaml
 parameters:
   InstanceType: 't3a.micro'
-  KeyName: 'iatlas-gitlab-runner-test'
+  KeyName: 'iatlas-gitlab-runner-staging'
   VpcId: !stack_output_external iatlasvpc::VPCId
   BastionHostSgId: !stack_output_external iatlasvpc::BastianSecurityGroup
   PublicSubnetId:
@@ -17,4 +17,4 @@ parameters:
     - !stack_output_external iatlasvpc::PrivateSubnet2
   DesiredCapacity: '1'
   MaxSize: '2'
-  DockerImageTag: '49bb3ee1-test'
+  DockerImageTag: '49bb3ee1-staging'
