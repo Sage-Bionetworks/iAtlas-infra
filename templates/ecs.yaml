@@ -5,7 +5,7 @@ Parameters:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS instances.
   VpcId:
     Type: AWS::EC2::VPC::Id
-    Description: Select a VPC that allows instances access to the Internet.
+    Description: A VPC to run ECS instances in.
   BastionHostSgId:
     Type: String
     Description: The ID of the security group for bastion hosts
