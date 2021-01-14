@@ -9,9 +9,10 @@ stack_tags:
   Project: "iAtlas"
   OwnerEmail: "andrew.lamb@sagebase.org"
 parameters:
-  InstanceType: "t2.nano"
+  InstanceType: "t3a.medium"
   VpcName: iatlasvpc
   VpcSubnet: PrivateSubnet
-  AMIId: ami-0810a318c4b1243c5 #AWS Linux from https://ami.sageit.org
+  # AMIId: ami-0ca7208f904dc1874 #AWS Linux from https://ami.sageit.org
+  AMIId: ami-0904d89dd05570f62 #AWS Linux for testing in GenUI
   Environment: staging
   KeyName: "iatlas-gitlab-runner-staging"

@@ -7,8 +7,9 @@ stack_tags:
 dependencies:
   - common/iatlasvpc.yaml
 parameters:
-  InstanceType: 't3a.micro'
+  InstanceType: 't3a.medium'
   KeyName: 'iatlas-gitlab-runner-staging'
+  # KeyName: 'iatlas-api-staging' # For this to work, this key must be added in the SAGE AWS.
   VpcId: !stack_output_external iatlasvpc::VPCId
   BastionHostSgId: !stack_output_external iatlasvpc::BastianSecurityGroup
   PublicSubnetId:
@@ -22,3 +23,4 @@ parameters:
   DesiredCapacity: '1'
   MaxSize: '2'
   DockerImageTag: '49bb3ee1-staging'
+on_failure: 'DO_NOTHING'

@@ -3,8 +3,8 @@ stack_name: iatlas-prod
 dependencies:
   - common/iatlasvpc.yaml
 parameters:
-  InstanceType: 't3a.micro'
-  KeyName: 'iatlas-gitlab-runner-prod'
+  InstanceType: 't3a.medium'
+  KeyName: 'iatlas-api-prod' # For this to work, this key must be added in the SAGE AWS.
   VpcId: !stack_output_external iatlasvpc::VPCId
   BastionHostSgId: !stack_output_external iatlasvpc::BastianSecurityGroup
   PublicSubnetId:
