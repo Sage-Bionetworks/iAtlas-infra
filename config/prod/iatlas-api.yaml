@@ -1,5 +1,6 @@
 template_path: ecs.yaml
 stack_name: iatlas-prod
+stack_tags: {{stack_group_config.stack_tags}}
 dependencies:
   - common/iatlasvpc.yaml
 stack_tags: {{stack_group_config.stack_tags}}
