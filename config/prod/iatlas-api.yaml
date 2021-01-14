@@ -1,0 +1,21 @@
+template_path: ecs.yaml
+stack_name: iatlas-prod
+dependencies:
+  - common/iatlasvpc.yaml
+stack_tags: {{stack_group_config.stack_tags}}
+parameters:
+  InstanceType: 't3a.medium'
+  KeyName: 'iatlas-api-prod' # For this to work, this key must be added in the SAGE AWS.
+  VpcId: !stack_output_external iatlasvpc::VPCId
+  BastionHostSgId: !stack_output_external iatlasvpc::BastianSecurityGroup
+  PublicSubnetId:
+    - !stack_output_external iatlasvpc::PublicSubnet
+    - !stack_output_external iatlasvpc::PublicSubnet1
+    - !stack_output_external iatlasvpc::PublicSubnet2
+  PrivateSubnetId:
+    - !stack_output_external iatlasvpc::PrivateSubnet
+    - !stack_output_external iatlasvpc::PrivateSubnet1
+    - !stack_output_external iatlasvpc::PrivateSubnet2
+  DesiredCapacity: '1'
+  MaxSize: '2'
+  DockerImageTag: '49bb3ee1-staging'
