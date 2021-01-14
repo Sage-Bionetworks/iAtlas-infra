@@ -31,13 +31,13 @@ Parameters:
     ConstraintDescription: Please choose a valid instance type.
   DockerImageTag:
     Type: String
-    Description: The Docker image tae to run
-Mappings:
-  AWSRegionToAMI:
-    us-east-1:
-      AMIID: ami-0669eafef622afea1
-    us-west-2:
-      AMIID: ami-05d33de432484ef34
+    Description: The Docker image to run from registry registry.gitlab.com/cri-iatlas/iatlas-api
+  # This is commented out as, though it is the approach recommended to get the latest AMI, it doesn't provide KeyNames fro the AMI's.
+  # For now, using AMI's from https://ami.sageit.org/ as we believe KeyNames have been generated for these.
+  # LatestAmiId:
+  #   Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+  #   Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-ebs'
+  #   Description: A reference to the latest AMI.
 Resources:
   # iAtlas API task execution IAM role
   # This is necessary so it can read the Secrets Manager entry that contains the external
@@ -220,7 +220,7 @@ Resources:
   ContainerInstances:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId: !FindInMap [AWSRegionToAMI, !Ref 'AWS::Region', AMIID]
+      ImageId: ami-0810a318c4b1243c5 # packer-base-amazonlinux2-v1.0.2 from https://ami.sageit.org
       SecurityGroups: [!Ref 'EcsSecurityGroup']
       InstanceType: !Ref 'InstanceType'
       IamInstanceProfile: !Ref 'EC2InstanceProfile'
