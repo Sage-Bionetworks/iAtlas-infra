@@ -4,7 +4,7 @@ dependencies:
   - common/iatlasvpc.yaml
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
-  InstanceType: 't3a.micro'
+  InstanceType: 't3a.medium'
   KeyName: 'iatlas-gitlab-runner-staging'
   VpcId: !stack_output_external iatlasvpc::VPCId
   BastionHostSgId: !stack_output_external iatlasvpc::BastianSecurityGroup
