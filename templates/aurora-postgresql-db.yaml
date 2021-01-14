@@ -21,7 +21,7 @@ Parameters:
     Description: "The database admin account password"
     Type: "String"
     MinLength: "1"
-    MaxLength: "41"
+    MaxLength: "43"
     AllowedPattern: "[a-zA-Z0-9]+"
     ConstraintDescription: "must contain only alphanumeric characters."
   DBInstanceClass:
