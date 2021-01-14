@@ -2,6 +2,7 @@ template_path: ecs.yaml
 stack_name: iatlas-prod
 dependencies:
   - common/iatlasvpc.yaml
+stack_tags: {{stack_group_config.stack_tags}}
 parameters:
   InstanceType: 't3a.medium'
   KeyName: 'iatlas-api-prod' # For this to work, this key must be added in the SAGE AWS.
