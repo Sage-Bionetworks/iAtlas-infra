@@ -5,7 +5,7 @@ dependencies:
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
   InstanceType: 't3a.medium'
-  KeyName: 'iatlas-gitlab-runner-staging'
+  KeyName: 'iatlas-api-staging' # For this to work, this key must be added in the SAGE AWS.
   VpcId: !stack_output_external iatlasvpc::VPCId
   BastionHostSgId: !stack_output_external iatlasvpc::BastianSecurityGroup
   PublicSubnetId:
