@@ -2,6 +2,7 @@ template_path: ecs.yaml
 stack_name: iatlas-staging
 dependencies:
   - common/iatlasvpc.yaml
+stack_tags: {{stack_group_config.stack_tags}}
 parameters:
   InstanceType: 't3a.micro'
   KeyName: 'iatlas-gitlab-runner-staging'

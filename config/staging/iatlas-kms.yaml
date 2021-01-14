@@ -1,6 +1,3 @@
 template_path: kms.yaml
 stack_name: iatlas-kms-staging
-stack_tags:
-  Department: "CompOnc"
-  Project: "iAtlas"
-  OwnerEmail: "andrew.lamb@sagebase.org"
+stack_tags: {{stack_group_config.stack_tags}}
