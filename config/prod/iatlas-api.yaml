@@ -19,3 +19,4 @@ parameters:
   DesiredCapacity: '1'
   MaxSize: '2'
   DockerImageTag: '49bb3ee1-staging'
+  FlaskEnv: 'production'
