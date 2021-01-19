@@ -47,12 +47,67 @@ Parameters:
     Description: The environment that the Flask application is running in. Valid values are `production`, `staging`, `development`, or `test`.
     Default: 'production'
 Resources:
+  # Managed Policies
+  AccessRegCredSecretPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - ssm:GetParameters
+              - secretsmanager:GetSecretValue
+              - kms:Decrypt
+            Resource:
+                - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
+                - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*'
+                - !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*'
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+            Resource: '*'
+
+  EcsServicePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: ['elasticloadbalancing:DeregisterInstancesFromLoadBalancer', 'elasticloadbalancing:DeregisterTargets', 'elasticloadbalancing:Describe*', 'elasticloadbalancing:RegisterInstancesWithLoadBalancer', 'elasticloadbalancing:RegisterTargets', 'ec2:Describe*', 'ec2:AuthorizeSecurityGroupIngress']
+            Resource: '*'
+
+  Ec2Policy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: ['ecs:CreateCluster', 'ecs:DeregisterContainerInstance', 'ecs:DiscoverPollEndpoint', 'ecs:Poll', 'ecs:RegisterContainerInstance', 'ecs:StartTelemetrySession', 'ecs:Submit*', 'logs:CreateLogStream', 'logs:PutLogEvents']
+            Resource: '*'
+
+  AutoScalingServicePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: ['application-autoscaling:*', 'cloudwatch:DescribeAlarms', 'cloudwatch:PutMetricAlarm', 'ecs:DescribeServices', 'ecs:UpdateService']
+            Resource: '*'
+
+  # Roles
+  #
   # iAtlas API task execution IAM role
   # This is necessary so it can read the Secrets Manager entry that contains the external
   # registry credentials
   IAtlasIAMExecutionRole:
     Type: AWS::IAM::Role
     Properties:
+      ManagedPolicyArns:
+        - !Ref AccessRegCredSecretPolicy
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -63,28 +118,45 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Path: /
-      Policies:
-        - PolicyName: AccessRegCredSecret
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - ssm:GetParameters
-                  - secretsmanager:GetSecretValue
-                  - kms:Decrypt
-                Resource:
-                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
-                  - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*'
-                  - !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*'
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogStream
-                Resource: '*'
+  ECSServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - !Ref EcsServicePolicy
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ecs.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Path: /
+  EC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - !Ref Ec2Policy
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ec2.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Path: /
+  AutoscalingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - !Ref AutoScalingServicePolicy
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [application-autoscaling.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Path: /
 
-  ECSCluster:
-    Type: AWS::ECS::Cluster
-
+  # Groups
+  #
   # Security group for ECS nodes
   # Should allow ephemeral ports from the ALB SG
   # Should allow SSH from the Bastion hosts security group
@@ -93,6 +165,7 @@ Resources:
     Properties:
       GroupDescription: ECS Node Security Group
       VpcId: !Ref 'VpcId'
+
   EcsSecurityGroupALBports:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -101,6 +174,7 @@ Resources:
       FromPort: 31000
       ToPort: 61000
       SourceSecurityGroupId: !Ref 'EcsAlbSecurityGroup'
+
   EcsSecurityGroupSSHfromBastion:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -117,6 +191,7 @@ Resources:
     Properties:
       GroupDescription: Load Balancer for ECS security group
       VpcId: !Ref 'VpcId'
+
   EcsAlbSecurityGroupHTTPinbound:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -132,9 +207,24 @@ Resources:
       LogGroupName: !Join ['-', [ECSLogGroup, !Ref 'AWS::StackName']]
       RetentionInDays: 14
 
+  ECSAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier: !Ref 'PrivateSubnetId'
+      LaunchConfigurationName: !Ref 'ContainerInstances'
+      MinSize: !Ref 'MinSize'
+      MaxSize: !Ref 'MaxSize'
+      DesiredCapacity: !Ref 'DesiredCapacity'
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+    UpdatePolicy:
+      AutoScalingReplacingUpdate:
+        WillReplace: true
+
   # The 'Family' property is key here, it tells ECS to increment the version rather
   # than create a new Task Definition
-  taskdefinition:
+  taskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: !Ref 'AWS::StackName'
@@ -167,6 +257,12 @@ Resources:
               ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:username::'
             - Name: POSTGRES_PASSWORD
               ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:password::'
+
+  # ALB Load Balancer
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+
   ECSALB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
@@ -212,20 +308,6 @@ Resources:
       Protocol: HTTP
       UnhealthyThresholdCount: 2
       VpcId: !Ref 'VpcId'
-  ECSAutoScalingGroup:
-    Type: AWS::AutoScaling::AutoScalingGroup
-    Properties:
-      VPCZoneIdentifier: !Ref 'PrivateSubnetId'
-      LaunchConfigurationName: !Ref 'ContainerInstances'
-      MinSize: !Ref 'MinSize'
-      MaxSize: !Ref 'MaxSize'
-      DesiredCapacity: !Ref 'DesiredCapacity'
-    CreationPolicy:
-      ResourceSignal:
-        Timeout: PT15M
-    UpdatePolicy:
-      AutoScalingReplacingUpdate:
-        WillReplace: true
   ContainerInstances:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -252,63 +334,7 @@ Resources:
           ContainerPort: 80
           TargetGroupArn: !Ref 'ECSTG'
       Role: !Ref 'ECSServiceRole'
-      TaskDefinition: !Ref 'taskdefinition'
-  ECSServiceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: [ecs.amazonaws.com]
-            Action: ['sts:AssumeRole']
-      Path: /
-      Policies:
-        - PolicyName: ecs-service
-          PolicyDocument:
-            Statement:
-              - Effect: Allow
-                Action: ['elasticloadbalancing:DeregisterInstancesFromLoadBalancer', 'elasticloadbalancing:DeregisterTargets',
-                  'elasticloadbalancing:Describe*', 'elasticloadbalancing:RegisterInstancesWithLoadBalancer',
-                  'elasticloadbalancing:RegisterTargets', 'ec2:Describe*', 'ec2:AuthorizeSecurityGroupIngress']
-                Resource: '*'
-  EC2Role:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: [ec2.amazonaws.com]
-            Action: ['sts:AssumeRole']
-      Path: /
-      Policies:
-        - PolicyName: ecs-service
-          PolicyDocument:
-            Statement:
-              - Effect: Allow
-                Action: ['ecs:CreateCluster', 'ecs:DeregisterContainerInstance', 'ecs:DiscoverPollEndpoint',
-                  'ecs:Poll', 'ecs:RegisterContainerInstance', 'ecs:StartTelemetrySession',
-                  'ecs:Submit*', 'logs:CreateLogStream', 'logs:PutLogEvents']
-                Resource: '*'
-  AutoscalingRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: [application-autoscaling.amazonaws.com]
-            Action: ['sts:AssumeRole']
-      Path: /
-      Policies:
-        - PolicyName: service-autoscaling
-          PolicyDocument:
-            Statement:
-              - Effect: Allow
-                Action: ['application-autoscaling:*', 'cloudwatch:DescribeAlarms', 'cloudwatch:PutMetricAlarm',
-                  'ecs:DescribeServices', 'ecs:UpdateService']
-                Resource: '*'
+      TaskDefinition: !Ref 'taskDefinition'
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -323,4 +349,4 @@ Outputs:
     Description: Your ALB DNS URL
     Value: !Join ['', [!GetAtt [ECSALB, DNSName]]]
   taskdef:
-    Value: !Ref 'taskdefinition'
+    Value: !Ref 'taskDefinition'
