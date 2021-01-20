@@ -1,6 +1,5 @@
 template_path: ecs.yaml
 stack_name: iatlas-prod
-stack_tags: {{stack_group_config.stack_tags}}
 dependencies:
   - common/iatlasvpc.yaml
 stack_tags: {{stack_group_config.stack_tags}}
@@ -19,4 +18,5 @@ parameters:
     - !stack_output_external iatlasvpc::PrivateSubnet2
   DesiredCapacity: '1'
   MaxSize: '2'
-  DockerImageTag: '49bb3ee1-prod'
+  DockerImageTag: '49bb3ee1-staging'
+  FlaskEnv: 'production'

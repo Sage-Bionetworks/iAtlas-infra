@@ -3,6 +3,7 @@ stack_name: iatlas-staging
 stack_tags: {{stack_group_config.stack_tags}}
 dependencies:
   - common/iatlasvpc.yaml
+stack_tags: {{stack_group_config.stack_tags}}
 parameters:
   InstanceType: 't3a.medium'
   KeyName: 'iatlas-gitlab-runner-staging'
@@ -20,4 +21,5 @@ parameters:
   DesiredCapacity: '1'
   MaxSize: '2'
   DockerImageTag: '49bb3ee1-staging'
+  FlaskEnv: 'staging'
 on_failure: 'DO_NOTHING'
