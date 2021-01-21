@@ -249,8 +249,7 @@ Resources:
           Essential: true
           Image: !Join [':', ['registry.gitlab.com/cri-iatlas/iatlas-api', !Ref 'DockerImageTag']]
           RepositoryCredentials:
-            # CredentialsParameter: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:staging/gitlab-registry-credentials'
-            CredentialsParameter: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:staging/gitlab-registry-credentials-PNkzen'
+            CredentialsParameter: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:staging/gitlab-registry-credentials'
           Memory: 300
           LogConfiguration:
             LogDriver: awslogs
@@ -265,21 +264,13 @@ Resources:
               Value: !Ref 'FlaskEnv'
           Secrets:
             - Name: POSTGRES_DB
-              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:staging/RDS/iatlas_api_creds:dbname::'
+              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:dbname::'
             - Name: POSTGRES_HOST
-              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:staging/RDS/iatlas_api_creds:host::'
+              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:host::'
             - Name: POSTGRES_USER
-              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:staging/RDS/iatlas_api_creds:username::'
+              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:username::'
             - Name: POSTGRES_PASSWORD
-              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:staging/RDS/iatlas_api_creds:password::'
-            # - Name: POSTGRES_DB
-            #   ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:dbname::'
-            # - Name: POSTGRES_HOST
-            #   ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:host::'
-            # - Name: POSTGRES_USER
-            #   ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:username::'
-            # - Name: POSTGRES_PASSWORD
-            #   ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:password::'
+              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:password::'
 
   # ALB Load Balancer
 
