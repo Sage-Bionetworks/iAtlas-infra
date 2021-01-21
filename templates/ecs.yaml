@@ -36,12 +36,11 @@ Parameters:
   DockerImageTag:
     Type: String
     Description: The Docker image to run from registry registry.gitlab.com/cri-iatlas/iatlas-api
-  # This is commented out as, though it is the approach recommended to get the latest AMI, it doesn't provide KeyNames fro the AMI's.
-  # For now, using AMI's from https://ami.sageit.org/ as we believe KeyNames have been generated for these.
-  # LatestAmiId:
-  #   Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
-  #   Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-ebs'
-  #   Description: A reference to the latest AMI.
+  # See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/retrieve-ecs-optimized_AMI.html
+  LatestEcsAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id'
+    Description: A reference to the latest ECS Optimized AMI Id.
   FlaskEnv:
     Type: String
     Description: The environment that the Flask application is running in. Valid values are `production`, `staging`, `development`, or `test`.
@@ -222,6 +221,21 @@ Resources:
       AutoScalingReplacingUpdate:
         WillReplace: true
 
+  ECSTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: ECSALB
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /graphiql
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      Name: ECSTG
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId: !Ref 'VpcId'
+
   # The 'Family' property is key here, it tells ECS to increment the version rather
   # than create a new Task Definition
   taskDefinition:
@@ -266,7 +280,6 @@ Resources:
   ECSALB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      Name: ECSALB
       Scheme: internet-facing
       LoadBalancerAttributes:
         - Key: idle_timeout.timeout_seconds
@@ -294,24 +307,10 @@ Resources:
           Values: [/]
       ListenerArn: !Ref 'ALBListener'
       Priority: 1
-  ECSTG:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    DependsOn: ECSALB
-    Properties:
-      HealthCheckIntervalSeconds: 10
-      HealthCheckPath: /graphiql
-      HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: 5
-      HealthyThresholdCount: 2
-      Name: ECSTG
-      Port: 80
-      Protocol: HTTP
-      UnhealthyThresholdCount: 2
-      VpcId: !Ref 'VpcId'
   ContainerInstances:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId: ami-0810a318c4b1243c5 # packer-base-amazonlinux2-v1.0.2 from https://ami.sageit.org
+      ImageId: !Ref 'LatestEcsAmiId'
       SecurityGroups: [!Ref 'EcsSecurityGroup']
       InstanceType: !Ref 'InstanceType'
       IamInstanceProfile: !Ref 'EC2InstanceProfile'

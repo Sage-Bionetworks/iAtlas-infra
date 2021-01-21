@@ -23,6 +23,12 @@ must be done manually.
 The GitLab runner is an EC2 instance that can use the KMS key connected to its environment
 to read secrets from the parameter store and interact with the Aurora cluster.
 
+## Contributing
+
+- Install [pre-commit](https://pre-commit.com/#install) app
+- Clone this repo
+- Run `pre-commit install` to install the git hook
+
 ## Test Deployment
 
 [Install aws cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
@@ -46,5 +52,11 @@ The contents should look like:
 [default]
 region = us-west-2
 ```
+
+Install [Python](https://www.python.org/)
+
+Install [sceptre-ssm-resolver](https://pypi.org/project/sceptre-ssm-resolver/)
+
+See [https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/) for information on installing Python packages for a specific project.
 
 [architecture]: infra-arch.svg "iAtlas architecture"
