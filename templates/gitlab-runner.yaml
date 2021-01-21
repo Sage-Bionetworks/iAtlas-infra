@@ -22,9 +22,11 @@ Parameters:
     Description: Name of an existing VPC to run the instance in.
     Type: String
     Default: iatlasvpc
-  AMIId:
-    Description: ID of the AMI to deploy
-    Type: AWS::EC2::Image::Id
+  # See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/retrieve-ecs-optimized_AMI.html
+  LatestEcsAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id'
+    Description: A reference to the latest ECS Optimized AMI Id.
   Environment:
     Description: Indication of which environment this runner is associated with
     Type: String
@@ -112,7 +114,7 @@ Resources:
   RunnerEc2Instance:
     Type: 'AWS::EC2::Instance'
     Properties:
-      ImageId: !Ref AMIId
+      ImageId: !Ref 'LatestEcsAmiId'
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
       IamInstanceProfile: !Ref RunnerInstanceProfile

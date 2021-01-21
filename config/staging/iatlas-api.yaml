@@ -1,13 +1,11 @@
 template_path: ecs.yaml
 stack_name: iatlas-staging
-stack_tags: {{stack_group_config.stack_tags}}
 dependencies:
   - common/iatlasvpc.yaml
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
   InstanceType: 't3a.medium'
-  KeyName: 'iatlas-gitlab-runner-staging'
-  # KeyName: 'iatlas-api-staging' # For this to work, this key must be added in the SAGE AWS.
+  KeyName: 'iatlas-api-staging' # For this to work, this key must be added in the SAGE AWS.
   VpcId: !stack_output_external iatlasvpc::VPCId
   BastionHostSgId: !stack_output_external iatlasvpc::BastianSecurityGroup
   PublicSubnetId:
@@ -22,4 +20,3 @@ parameters:
   MaxSize: '2'
   DockerImageTag: '49bb3ee1-staging'
   FlaskEnv: 'staging'
-on_failure: 'DO_NOTHING'
