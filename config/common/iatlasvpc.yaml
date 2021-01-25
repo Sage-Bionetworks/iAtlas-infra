@@ -2,8 +2,10 @@ template_path: remote/vpc-mini.yaml
 stack_name: iatlasvpc
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
-  VpcSubnetPrefix: "10.255.20"
+  VpcSubnetPrefix: '10.255.20'
   VpcName: iatlasvpc
+  PublicSubnetZones: '{{stack_group_config.region}}a, {{stack_group_config.region}}b, {{stack_group_config.region}}c'
+  PrivateSubnetZones: '{{stack_group_config.region}}a, {{stack_group_config.region}}b, {{stack_group_config.region}}c'
 hooks:
   before_launch:
-    - !cmd "curl https://{{stack_group_config.admincentral_cf_bucket}}.s3.amazonaws.com/aws-infra/master/vpc-mini.yaml --create-dirs -o templates/remote/vpc-mini.yaml"
+    - !cmd 'curl https://{{stack_group_config.admincentral_cf_bucket}}.s3.amazonaws.com/aws-infra/master/vpc-mini.yaml --create-dirs -o templates/remote/vpc-mini.yaml'
