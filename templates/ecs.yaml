@@ -31,7 +31,15 @@ Parameters:
     Description: EC2 instance type
     Type: String
     Default: t3a.micro
-    AllowedValues: [t3.micro, t3.small, t3.medium, t3.large, t3a.micro, t3a.small, t3a.medium, t3a.large]
+    AllowedValues:
+      - t3.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+      - t3a.micro
+      - t3a.small
+      - t3a.medium
+      - t3a.large
     ConstraintDescription: Please choose a valid instance type.
   DockerImageTag:
     Type: String
@@ -45,6 +53,11 @@ Parameters:
     Type: String
     Description: The environment that the Flask application is running in. Valid values are `production`, `staging`, `development`, or `test`.
     Default: 'production'
+    AllowedValues:
+      - test
+      - development
+      - staging
+      - production
 Resources:
   # Managed Policies
   AccessRegCredSecretPolicy:
@@ -74,7 +87,14 @@ Resources:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
-            Action: ['elasticloadbalancing:DeregisterInstancesFromLoadBalancer', 'elasticloadbalancing:DeregisterTargets', 'elasticloadbalancing:Describe*', 'elasticloadbalancing:RegisterInstancesWithLoadBalancer', 'elasticloadbalancing:RegisterTargets', 'ec2:Describe*', 'ec2:AuthorizeSecurityGroupIngress']
+            Action:
+              - 'elasticloadbalancing:DeregisterInstancesFromLoadBalancer'
+              - 'elasticloadbalancing:DeregisterTargets'
+              - 'elasticloadbalancing:Describe*'
+              - 'elasticloadbalancing:RegisterInstancesWithLoadBalancer'
+              - 'elasticloadbalancing:RegisterTargets'
+              - 'ec2:Describe*'
+              - 'ec2:AuthorizeSecurityGroupIngress'
             Resource: '*'
 
   Ec2Policy:
@@ -84,7 +104,16 @@ Resources:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
-            Action: ['ecs:CreateCluster', 'ecs:DeregisterContainerInstance', 'ecs:DiscoverPollEndpoint', 'ecs:Poll', 'ecs:RegisterContainerInstance', 'ecs:StartTelemetrySession', 'ecs:Submit*', 'logs:CreateLogStream', 'logs:PutLogEvents']
+            Action:
+              - 'ecs:CreateCluster'
+              - 'ecs:DeregisterContainerInstance'
+              - 'ecs:DiscoverPollEndpoint'
+              - 'ecs:Poll'
+              - 'ecs:RegisterContainerInstance'
+              - 'ecs:StartTelemetrySession'
+              - 'ecs:Submit*'
+              - 'logs:CreateLogStream'
+              - 'logs:PutLogEvents'
             Resource: '*'
 
   AutoScalingServicePolicy:
@@ -94,7 +123,12 @@ Resources:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
-            Action: ['application-autoscaling:*', 'cloudwatch:DescribeAlarms', 'cloudwatch:PutMetricAlarm', 'ecs:DescribeServices', 'ecs:UpdateService']
+            Action:
+              - 'application-autoscaling:*'
+              - 'cloudwatch:DescribeAlarms'
+              - 'cloudwatch:PutMetricAlarm'
+              - 'ecs:DescribeServices'
+              - 'ecs:UpdateService'
             Resource: '*'
 
   # Roles
