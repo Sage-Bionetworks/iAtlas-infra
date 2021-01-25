@@ -9,25 +9,25 @@ Parameters:
     Description: 'Encryption key to use for storage'
     Type: String
   MasterUsername:
-    NoEcho: "true"
-    Description: "The database admin account username"
-    Type: "String"
-    MinLength: "1"
-    MaxLength: "16"
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
-    ConstraintDescription: "Must begin with a letter and contain only alphanumeric characters."
+    NoEcho: 'true'
+    Description: 'The database admin account username'
+    Type: 'String'
+    MinLength: '1'
+    MaxLength: '16'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: 'Must begin with a letter and contain only alphanumeric characters.'
   MasterUserPassword:
-    NoEcho: "true"
-    Description: "The database admin account password"
-    Type: "String"
-    MinLength: "1"
-    MaxLength: "43"
-    AllowedPattern: "[a-zA-Z0-9]+"
-    ConstraintDescription: "must contain only alphanumeric characters."
+    NoEcho: 'true'
+    Description: 'The database admin account password'
+    Type: 'String'
+    MinLength: '1'
+    MaxLength: '43'
+    AllowedPattern: '[a-zA-Z0-9]+'
+    ConstraintDescription: 'must contain only alphanumeric characters.'
   DBInstanceClass:
-    Description: "Instance class. Please refer to: https://docs.aws.amazon.com/documentdb/latest/developerguide/db-instance-classes.html#db-instance-classes-by-region"
-    Type: "String"
-    ConstraintDescription: "Instance type must be of the ones supported for the region. Please refer to: https://docs.aws.amazon.com/documentdb/latest/developerguide/db-instance-classes.html#db-instance-classes-by-region"
+    Description: 'Instance class. Please refer to: https://docs.aws.amazon.com/documentdb/latest/developerguide/db-instance-classes.html#db-instance-classes-by-region'
+    Type: 'String'
+    ConstraintDescription: 'Instance type must be of the ones supported for the region. Please refer to: https://docs.aws.amazon.com/documentdb/latest/developerguide/db-instance-classes.html#db-instance-classes-by-region'
     AllowedValues:
       - db.t3.xlarge
       - db.t3.large
@@ -53,16 +53,16 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
           -
-            Effect: "Allow"
+            Effect: 'Allow'
             Principal:
               Service:
-                - "monitoring.rds.amazonaws.com"
+                - 'monitoring.rds.amazonaws.com'
             Action:
-              - "sts:AssumeRole"
-      Path: "/"
+              - 'sts:AssumeRole'
+      Path: '/'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
 
@@ -90,7 +90,7 @@ Resources:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
       GroupId: !GetAtt 'ClusterSecurityGroup.GroupId'
-      IpProtocol: "-1"
+      IpProtocol: '-1'
       SourceSecurityGroupId: !Ref ClusterSecurityGroup
       Description: 'Self Reference'
 
@@ -109,7 +109,7 @@ Resources:
   RDSDBClusterParameterGroup:
     Type: AWS::RDS::DBClusterParameterGroup
     Properties:
-      Description: !Join [ "- ", [ "Aurora Parameter Group for  ", !Ref 'AWS::StackName' ] ]
+      Description: !Join [ '- ', [ 'Aurora Parameter Group for  ', !Ref 'AWS::StackName' ] ]
       Family: aurora-postgresql11
       Parameters:
         rds.force_ssl: 1
@@ -117,7 +117,7 @@ Resources:
   DBParameterGroup:
     Type: AWS::RDS::DBParameterGroup
     Properties:
-      Description: !Join [ "- ", [ "Aurora Parameter Group for  ", !Ref 'AWS::StackName' ] ]
+      Description: !Join [ '- ', [ 'Aurora Parameter Group for  ', !Ref 'AWS::StackName' ] ]
       Family: aurora-postgresql11
 # Currently not changing parameters from default values
 # https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Reference.html#AuroraPostgreSQL.Reference.ParameterGroups
@@ -136,7 +136,7 @@ Resources:
       DBSubnetGroupName: !Ref DBSubnetGroup
       DBClusterParameterGroupName: !Ref RDSDBClusterParameterGroup
       StorageEncrypted: true
-      PreferredMaintenanceWindow: "sat:06:54-sat:07:24"
+      PreferredMaintenanceWindow: 'sat:06:54-sat:07:24'
       VpcSecurityGroupIds:
 #       - !Ref DBAccessSecurityGroup
         - !Ref ClusterSecurityGroup

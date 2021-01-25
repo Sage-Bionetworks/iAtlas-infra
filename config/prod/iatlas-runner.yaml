@@ -6,8 +6,9 @@ dependencies:
   - prod/iatlas-kms.yaml
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
-  InstanceType: "t3a.medium"
+  InstanceType: 't3a.medium'
   VpcName: iatlasvpc
   VpcSubnet: PrivateSubnet
   Environment: prod
-  KeyName: "iatlas-gitlab-runner-prod"
+  KeyName: 'iatlas-gitlab-runner-prod'
+  InstanceName: 'iatlas-api-prod'

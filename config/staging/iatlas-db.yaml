@@ -9,6 +9,6 @@ parameters:
   KmsKeyName: !stack_output_external iatlas-kms-staging::KmsKey
   MasterUsername: !ssm /iatlas/staging/AuroraUsername
   MasterUserPassword: !ssm /iatlas/staging/AuroraPassword
-  DBInstanceClass: "db.t3.large"
-  DBEngineVersion: "11.7"
-  DBPort: "5432"
+  DBInstanceClass: 'db.t3.large'
+  DBEngineVersion: '11.7'
+  DBPort: '5432'

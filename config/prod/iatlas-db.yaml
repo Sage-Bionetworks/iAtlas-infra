@@ -9,6 +9,6 @@ parameters:
   KmsKeyName: !stack_output_external iatlas-kms-prod::KmsKey
   MasterUsername: !ssm /iatlas/prod/AuroraUsername
   MasterUserPassword: !ssm /iatlas/prod/AuroraPassword
-  DBInstanceClass: "db.t3.large"
-  DBEngineVersion: "11.7"
-  DBPort: "5432"
+  DBInstanceClass: 'db.t3.large'
+  DBEngineVersion: '11.7'
+  DBPort: '5432'
