@@ -10,6 +10,9 @@ Parameters:
     Description: WebServer EC2 instance type
     Type: String
     Default: t3.nano
+  InstanceName:
+    Type: String
+    Description: The name to be applied to the EC2 instance so that it may be more easily identified in the console.
   VpcSubnet:
     Description: Existing VPC subnet to home the instance. Currently only private subnets allowed.
     Type: String
@@ -34,7 +37,7 @@ Parameters:
 Resources:
   # KMS Keys
   KmsDecryptManagedPolicy:
-    Type: "AWS::IAM::ManagedPolicy"
+    Type: 'AWS::IAM::ManagedPolicy'
     Properties:
       PolicyDocument:
         Version: 2012-10-17
@@ -62,7 +65,7 @@ Resources:
 
   #Allow read parameter on arn...parameter/iatlas/{prod,staging}/*
   SsmManagedPolicy:
-    Type: "AWS::IAM::ManagedPolicy"
+    Type: 'AWS::IAM::ManagedPolicy'
     Properties:
       PolicyDocument:
         Version: 2012-10-17
@@ -106,7 +109,7 @@ Resources:
   RunnerInstanceProfile:
     Type: 'AWS::IAM::InstanceProfile'
     Properties:
-      Path: "/"
+      Path: '/'
       Roles:
         - !Ref EC2ServiceRole
 
@@ -119,7 +122,7 @@ Resources:
       IamInstanceProfile: !Ref RunnerInstanceProfile
       NetworkInterfaces:
         - DeleteOnTermination: true
-          DeviceIndex: "0"
+          DeviceIndex: '0'
           GroupSet:
             - !ImportValue
               'Fn::Sub': '${AWS::Region}-${VpcName}-VpnSecurityGroup'
@@ -128,10 +131,12 @@ Resources:
           SubnetId: !ImportValue
             'Fn::Sub': '${AWS::Region}-${VpcName}-${VpcSubnet}'
       Tags:
-        - Key: "ManagedInstanceMaintenanceTarget"
-          Value: "yes"
-        - Key: "PatchGroup"
-          Value: "prod-default"
+        - Key: 'Name'
+          Value: !Ref 'InstanceName'
+        - Key: 'ManagedInstanceMaintenanceTarget'
+          Value: 'yes'
+        - Key: 'PatchGroup'
+          Value: 'prod-default'
 Outputs:
   RunnerEc2InstanceId:
     Value: !Ref RunnerEc2Instance

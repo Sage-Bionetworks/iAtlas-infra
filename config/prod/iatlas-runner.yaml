@@ -11,4 +11,4 @@ parameters:
   VpcSubnet: PrivateSubnet
   Environment: prod
   KeyName: 'iatlas-gitlab-runner-prod'
-  InstanceName: 'iatlas-api-prod'
+  InstanceName: 'iatlas-gitlab-runner-prod'

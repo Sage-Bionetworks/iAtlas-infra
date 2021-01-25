@@ -6,8 +6,9 @@ dependencies:
   - staging/iatlas-kms.yaml
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
-  InstanceType: "t3a.medium"
+  InstanceType: 't3a.medium'
   VpcName: iatlasvpc
   VpcSubnet: PrivateSubnet
   Environment: staging
-  KeyName: "iatlas-gitlab-runner-staging"
+  KeyName: 'iatlas-gitlab-runner-staging'
+  InstanceName: 'iatlas-gitlab-runner-staging'
