@@ -1,6 +1,9 @@
 project_code: 'sage-bionetworks'
 profile: {{ var.profile | default('default') }}
 region: {{ var.region | default('us-east-1') }}
+docker_image_tag: {{ environment_variable.DOCKER_IMAGE_TAG | default('49bb3ee1-staging') }}
+domain_name: {{ environment_variable.DOMAIN_NAME | default('sage-api.genui.dev') }}
+hosted_zone_id: {{ environment_variable.HOSTED_ZONE_ID | default('Z07919013BSAJ0U6FB3Y9') }}
 template_bucket_name: 'bootstrap-awss3cloudformationbucket-114n2ojlbvj21'
 template_key_prefix: {{ environment_variable.TRAVIS_BRANCH | default('testing') }}
 admincentral_cf_bucket: 'bootstrap-awss3cloudformationbucket-19qromfd235z9'

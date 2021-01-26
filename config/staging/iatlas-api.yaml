@@ -18,5 +18,7 @@ parameters:
     - !stack_output_external iatlasvpc::PrivateSubnet2
   DesiredCapacity: '1'
   MaxSize: '2'
-  DockerImageTag: '49bb3ee1-staging'
+  DockerImageTag: {{stack_group_config.docker_image_tag}}
   FlaskEnv: 'staging'
+  DomainName: {{stack_group_config.domain_name}}
+  HostedZoneId: {{stack_group_config.hosted_zone_id}}
