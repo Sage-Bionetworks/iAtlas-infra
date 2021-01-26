@@ -3,6 +3,16 @@ Parameters:
   KeyName:
     Type: AWS::EC2::KeyPair::KeyName
     Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS instances.
+  # DomainName:
+  #   Type: String
+  #   Description: The identification string that defines the internet facing app.
+  # HostedZoneId:
+  #   Type: String
+  #   Description: The Hosted Zone Id associated with the passed DomainName.
+  CertificateId:
+    Type: String
+    Default: edcec111-b757-43de-ae61-490f72cf14d7
+    Description: Id of the Certificate.
   VpcId:
     Type: AWS::EC2::VPC::Id
     Description: A VPC to run ECS instances in.
@@ -72,9 +82,9 @@ Resources:
               - secretsmanager:GetSecretValue
               - kms:Decrypt
             Resource:
-                - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
-                - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*'
-                - !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*'
+              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
+              - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*'
+              - !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*'
           - Effect: Allow
             Action:
               - logs:CreateLogStream
@@ -199,7 +209,7 @@ Resources:
       GroupDescription: ECS Node Security Group
       VpcId: !Ref 'VpcId'
 
-  EcsSecurityGroupALBports:
+  EcsSecurityGroupAlbPorts:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref 'EcsSecurityGroup'
@@ -218,20 +228,20 @@ Resources:
       SourceSecurityGroupId: !Ref 'BastionHostSgId'
 
   # Security group for the ALB that goes in front
-  # Should only allow port 80 from the world for now
+  # Should only allow port 443 from the world
   EcsAlbSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Load Balancer for ECS security group
       VpcId: !Ref 'VpcId'
 
-  EcsAlbSecurityGroupHTTPinbound:
+  EcsAlbSecurityGroupHttpsInbound:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref 'EcsAlbSecurityGroup'
       IpProtocol: tcp
-      FromPort: 80
-      ToPort: 80
+      FromPort: 443
+      ToPort: 443
       CidrIp: 0.0.0.0/0
 
   CloudwatchLogsGroup:
@@ -260,7 +270,7 @@ Resources:
     DependsOn: ECSALB
     Properties:
       HealthCheckIntervalSeconds: 10
-      HealthCheckPath: /graphiql
+      HealthCheckPath: /home
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
@@ -306,11 +316,17 @@ Resources:
             - Name: POSTGRES_PASSWORD
               ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:password::'
 
-  # ALB Load Balancer
-
   ECSCluster:
     Type: AWS::ECS::Cluster
 
+  ListenerCertificate:
+    Type: AWS::ElasticLoadBalancingV2::ListenerCertificate
+    Properties:
+      Certificates:
+        - CertificateArn: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${CertificateId}'
+      ListenerArn: !Ref AlbHttpsListener
+
+  # ALB Load Balancer
   ECSALB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
@@ -320,27 +336,38 @@ Resources:
           Value: '30'
       Subnets: !Ref 'PublicSubnetId'
       SecurityGroups: [!Ref 'EcsAlbSecurityGroup']
-  ALBListener:
+  AlbHttpListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     DependsOn: ECSServiceRole
     Properties:
       DefaultActions:
-        - Type: forward
-          TargetGroupArn: !Ref 'ECSTG'
+        - Order: 1
+          Type: 'redirect'
+          RedirectConfig:
+            Protocol: 'HTTPS'
+            Port: '443'
+            Host: '#{host}'
+            Path: '/#{path}'
+            Query: '#{query}'
+            StatusCode: 'HTTP_301'
       LoadBalancerArn: !Ref 'ECSALB'
       Port: 80
-      Protocol: HTTP
-  ECSALBListenerRule:
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+      Protocol: 'HTTP'
+  AlbHttpsListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn: ECSServiceRole
     Properties:
-      Actions:
-        - Type: forward
+      DefaultActions:
+        - Order: 1
+          Type: 'forward'
           TargetGroupArn: !Ref 'ECSTG'
-      Conditions:
-        - Field: path-pattern
-          Values: [/]
-      ListenerArn: !Ref 'ALBListener'
-      Priority: 1
+      LoadBalancerArn: !Ref 'ECSALB'
+      Port: 443
+      Protocol: 'HTTPS'
+      SslPolicy: 'ELBSecurityPolicy-2016-08'
+      Certificates:
+        - CertificateArn: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${CertificateId}'
+
   ContainerInstances:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -358,7 +385,9 @@ Resources:
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource ECSAutoScalingGroup --region ${AWS::Region}
   service:
     Type: AWS::ECS::Service
-    DependsOn: ALBListener
+    DependsOn:
+      - AlbHttpListener
+      - AlbHttpsListener
     Properties:
       Cluster: !Ref 'ECSCluster'
       DesiredCount: 1
