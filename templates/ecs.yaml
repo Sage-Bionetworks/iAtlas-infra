@@ -3,16 +3,12 @@ Parameters:
   KeyName:
     Type: AWS::EC2::KeyPair::KeyName
     Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS instances.
-  # DomainName:
-  #   Type: String
-  #   Description: The identification string that defines the internet facing app.
-  # HostedZoneId:
-  #   Type: String
-  #   Description: The Hosted Zone Id associated with the passed DomainName.
-  CertificateId:
+  DomainName:
     Type: String
-    Default: edcec111-b757-43de-ae61-490f72cf14d7
-    Description: Id of the Certificate.
+    Description: The identification string that defines the internet facing app.
+  CertificateArn:
+    Type: String
+    Description: ARN of the Certificate.
   VpcId:
     Type: AWS::EC2::VPC::Id
     Description: A VPC to run ECS instances in.
@@ -323,7 +319,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::ListenerCertificate
     Properties:
       Certificates:
-        - CertificateArn: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${CertificateId}'
+        - CertificateArn: !Ref CertificateArn
       ListenerArn: !Ref AlbHttpsListener
 
   # ALB Load Balancer
@@ -336,6 +332,7 @@ Resources:
           Value: '30'
       Subnets: !Ref 'PublicSubnetId'
       SecurityGroups: [!Ref 'EcsAlbSecurityGroup']
+  # The LoadBalancer listener for HTTP redirects to HTTPS.
   AlbHttpListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     DependsOn: ECSServiceRole
@@ -353,6 +350,7 @@ Resources:
       LoadBalancerArn: !Ref 'ECSALB'
       Port: 80
       Protocol: 'HTTP'
+  # The HTTPS loadBalancer listener does the actual forwarding.
   AlbHttpsListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     DependsOn: ECSServiceRole
@@ -366,8 +364,19 @@ Resources:
       Protocol: 'HTTPS'
       SslPolicy: 'ELBSecurityPolicy-2016-08'
       Certificates:
-        - CertificateArn: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${CertificateId}'
-
+        - CertificateArn: !Ref CertificateArn
+  # Associate the domain name with the loadBalancer.
+  iatlasDNS:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneName: !Sub '${DomainName}.'
+      Comment: Zone apex alias targeted to ECSALB LoadBalancer.
+      RecordSets:
+        - Name: !Sub '${DomainName}.'
+          Type: A
+          AliasTarget:
+            HostedZoneId: !GetAtt 'ECSALB.CanonicalHostedZoneID'
+            DNSName: !GetAtt 'ECSALB.DNSName'
   ContainerInstances:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:

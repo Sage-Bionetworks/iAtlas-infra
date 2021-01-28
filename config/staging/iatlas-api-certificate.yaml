@@ -1,0 +1,11 @@
+template_path: acm-certificate.yaml
+stack_name: iatlas-api-certificate-staging
+stack_tags: {{stack_group_config.stack_tags}}
+dependencies:
+  - staging/iatlas-api-hostedzone.yaml
+parameters:
+  Department: {{stack_group_config.stack_tags.Department}}
+  DnsSubDomainName: {{stack_group_config.sub_domain_name}}
+  DnsDomainName: {{stack_group_config.domain_name}}
+  OwnerEmail: {{stack_group_config.stack_tags.OwnerEmail}}
+  Project: {{stack_group_config.stack_tags.Project}}

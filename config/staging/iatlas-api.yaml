@@ -2,6 +2,8 @@ template_path: ecs.yaml
 stack_name: iatlas-staging
 dependencies:
   - common/iatlasvpc.yaml
+  - staging/iatlas-api-certificate.yaml
+  - staging/iatlas-api-hostedzone.yaml
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
   InstanceType: 't3a.medium'
@@ -20,5 +22,5 @@ parameters:
   MaxSize: '2'
   DockerImageTag: {{stack_group_config.docker_image_tag}}
   FlaskEnv: 'staging'
-  DomainName: {{stack_group_config.domain_name}}
-  HostedZoneId: {{stack_group_config.hosted_zone_id}}
+  CertificateArn: !stack_output_external iatlas-api-certificate-staging::CertificateArn
+  DomainName: '{{stack_group_config.sub_domain_name}}.{{stack_group_config.domain_name}}'
