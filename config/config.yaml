@@ -2,8 +2,8 @@ project_code: 'sage-bionetworks'
 profile: {{ var.profile | default('default') }}
 region: {{ var.region | default('us-east-1') }}
 docker_image_tag: {{ environment_variable.DOCKER_IMAGE_TAG | default('86ca26fe-staging') }}
-domain_name: {{ environment_variable.DOMAIN_NAME | default('genui.dev') }}
-sub_domain_name: {{ environment_variable.SUB_DOMAIN_NAME | default('sage-api') }}
+domain_name: {{ environment_variable.DOMAIN_NAME | default('sagebionetworks.org') }}
+sub_domain_name: {{ environment_variable.SUB_DOMAIN_NAME | default('iatlas-api') }}
 template_bucket_name: 'bootstrap-awss3cloudformationbucket-114n2ojlbvj21'
 template_key_prefix: {{ environment_variable.TRAVIS_BRANCH | default('testing') }}
 admincentral_cf_bucket: 'bootstrap-awss3cloudformationbucket-19qromfd235z9'
