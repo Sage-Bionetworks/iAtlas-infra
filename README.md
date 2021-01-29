@@ -23,6 +23,17 @@ must be done manually.
 The GitLab runner is an EC2 instance that can use the KMS key connected to its environment
 to read secrets from the parameter store and interact with the Aurora cluster.
 
+### DB Secrets
+
+For the API to access the database the following secrets must be created in the [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/)
+
+- `iatlas_api_creds_encrypted`
+  with values for:
+  - `dbname`
+  - `host`
+  - `username`
+  - `password`
+
 ## Contributing
 
 - Install [pre-commit](https://pre-commit.com/#install) app

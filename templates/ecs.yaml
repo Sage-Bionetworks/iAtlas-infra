@@ -266,7 +266,7 @@ Resources:
     DependsOn: ECSALB
     Properties:
       HealthCheckIntervalSeconds: 10
-      HealthCheckPath: /home
+      HealthCheckPath: /healthcheck
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
