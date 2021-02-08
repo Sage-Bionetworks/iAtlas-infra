@@ -8,22 +8,14 @@ Parameters:
   KmsKeyName:
     Description: 'Encryption key to use for storage'
     Type: String
-  MasterUsername:
+  AuroraUserKey:
+    Description: The key for the secret Prod Aurora DB username value in the Secrets Manager.
     NoEcho: 'true'
-    Description: 'The database admin account username'
-    Type: 'String'
-    MinLength: '1'
-    MaxLength: '16'
-    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
-    ConstraintDescription: 'Must begin with a letter and contain only alphanumeric characters.'
-  MasterUserPassword:
+    Type: String
+  AuroraPassKey:
+    Description: The key for the secret Prod Aurora DB password value in the Secrets Manager.
     NoEcho: 'true'
-    Description: 'The database admin account password'
-    Type: 'String'
-    MinLength: '1'
-    MaxLength: '43'
-    AllowedPattern: '[a-zA-Z0-9]+'
-    ConstraintDescription: 'must contain only alphanumeric characters.'
+    Type: String
   DBInstanceClass:
     Description: 'Instance class. Please refer to: https://docs.aws.amazon.com/documentdb/latest/developerguide/db-instance-classes.html#db-instance-classes-by-region'
     Type: 'String'
@@ -131,17 +123,17 @@ Resources:
       Engine: aurora-postgresql
       EngineVersion: !Ref DBEngineVersion
       Port: !Ref DBPort
-      MasterUsername: !Ref MasterUsername
-      MasterUserPassword: !Ref MasterUserPassword
+      MasterUsername: !Sub '{{resolve:secretsmanager:arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:iatlas_db_creds_encrypted:${AuroraUserKey}'
+      MasterUserPassword: !Sub '{{resolve:secretsmanager:arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:iatlas_db_creds_encrypted:${AuroraPassKey}'
       DBSubnetGroupName: !Ref DBSubnetGroup
       DBClusterParameterGroupName: !Ref RDSDBClusterParameterGroup
       StorageEncrypted: true
       PreferredMaintenanceWindow: 'sat:06:54-sat:07:24'
       VpcSecurityGroupIds:
-#       - !Ref DBAccessSecurityGroup
         - !Ref ClusterSecurityGroup
         - !ImportValue
           'Fn::Sub': '${AWS::Region}-${VpcName}-VpnSecurityGroup'
+#       - !Ref DBAccessSecurityGroup
 
   DBInstance:
     Type: AWS::RDS::DBInstance

@@ -1,0 +1,22 @@
+template_path: gitlab-manager-runner.yaml
+stack_name: iatlas-gitlab-manager
+dependencies:
+  - common/iatlasvpc.yaml
+  - prod/iatlas-db.yaml
+  - staging/iatlas-db.yaml
+stack_tags: {{stack_group_config.stack_tags}}
+parameters:
+  VpcId: !stack_output_external iatlasvpc::VPCId
+  PrivateSubnetIds:
+    - !stack_output_external iatlasvpc::PrivateSubnet
+    - !stack_output_external iatlasvpc::PrivateSubnet1
+    - !stack_output_external iatlasvpc::PrivateSubnet2
+  KeyName: 'iatlas-gitlab-runner'
+  DbHostProd: !stack_output_external iatlasdb-prod::ClusterEndpoint
+  DbHostStaging: !stack_output_external iatlasdb-staging::ClusterEndpoint
+  DbUserKeyProd: 'username_prod'
+  DbUserKeyStaging: 'username_staging'
+  DbPassKeyProd: 'password_prod'
+  DbPassKeyStaging: 'password_staging'
+  GitLabRegToken: {{stack_group_config.gitlab_reg_token}}
+  GitLabRunnerInstanceType: 'c5d.xlarge'

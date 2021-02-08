@@ -64,8 +64,25 @@ Parameters:
       - development
       - staging
       - production
+  DbHost:
+    Type: String
+    Description: The reader endpoint for the DB cluster. For example - mystack-mydbcluster-ro-123456789012.us-east-2.rds.amazonaws.com
+  SecretDbNameKey:
+    Description: The key for the secret DB name value in the Secrets Manager.
+    NoEcho: 'true'
+    Type: String
+  SecretPasswordKey:
+    Description: The key for the secret DB password value in the Secrets Manager.
+    NoEcho: 'true'
+    Type: String
+  SecretUsernameKey:
+    Description: The key for the secret DB username value in the Secrets Manager.
+    NoEcho: 'true'
+    Type: String
 Resources:
-  # Managed Policies
+  ########################
+  ### Managed Policies ###
+  ########################
   AccessRegCredSecretPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -78,9 +95,10 @@ Resources:
               - secretsmanager:GetSecretValue
               - kms:Decrypt
             Resource:
-              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
-              - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*'
               - !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*'
+              - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted-??????'
+              - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_gitlab_registry_creds-??????'
+              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
           - Effect: Allow
             Action:
               - logs:CreateLogStream
@@ -137,8 +155,9 @@ Resources:
               - 'ecs:UpdateService'
             Resource: '*'
 
-  # Roles
-  #
+  #############
+  ### Roles ###
+  #############
   # iAtlas API task execution IAM role
   # This is necessary so it can read the Secrets Manager entry that contains the external
   # registry credentials
@@ -194,8 +213,9 @@ Resources:
             Action: ['sts:AssumeRole']
       Path: /
 
-  # Groups
-  #
+  ##############
+  ### Groups ###
+  ##############
   # Security group for ECS nodes
   # Should allow ephemeral ports from the ALB SG
   # Should allow SSH from the Bastion hosts security group
@@ -289,7 +309,7 @@ Resources:
           Essential: true
           Image: !Join [':', ['registry.gitlab.com/cri-iatlas/iatlas-api', !Ref 'DockerImageTag']]
           RepositoryCredentials:
-            CredentialsParameter: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:staging/gitlab-registry-credentials'
+            CredentialsParameter: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_gitlab_registry_creds'
           Memory: 300
           LogConfiguration:
             LogDriver: awslogs
@@ -302,15 +322,15 @@ Resources:
           Environment:
             - Name: FLASK_ENV
               Value: !Ref 'FlaskEnv'
+            - Name: POSTGRES_HOST
+              Value: !Ref 'DbHost'
           Secrets:
             - Name: POSTGRES_DB
-              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:dbname::'
-            - Name: POSTGRES_HOST
-              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:host::'
+              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:${SecretDbNameKey}::'
             - Name: POSTGRES_USER
-              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:username::'
+              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:${SecretUsernameKey}::'
             - Name: POSTGRES_PASSWORD
-              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:password::'
+              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:${SecretPasswordKey}::'
 
   ECSCluster:
     Type: AWS::ECS::Cluster

@@ -25,7 +25,7 @@ Parameters:
     Description: Domain to secure with the certificate (i.e. sagebionetworks.org)
     Type: String
   DnsSubDomainName:
-    Description: Sub domain (default is '*') to secure with certificate (i.e. "cancer" of cancer.sagebionetworks.org)
+    Description: Sub domain (default is '*') to secure with certificate (i.e. "api" of api.cri-iatlas.org)
     Type: String
     Default: '*'
 Resources:

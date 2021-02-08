@@ -4,6 +4,7 @@ dependencies:
   - common/iatlasvpc.yaml
   - prod/iatlas-api-certificate.yaml
   - prod/iatlas-api-hostedzone.yaml
+  - prod/iatlas-db.yaml
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
   InstanceType: 't3a.medium'
@@ -24,3 +25,7 @@ parameters:
   FlaskEnv: 'production'
   CertificateArn: !stack_output_external iatlas-api-certificate-prod::CertificateArn
   DomainName: '{{stack_group_config.sub_domain_name}}.{{stack_group_config.domain_name}}'
+  DbHost: !stack_output_external iatlasdb-prod::ClusterReadEndpoint
+  SecretDbNameKey: 'dbname_prod'
+  SecretPasswordKey: 'password_prod'
+  SecretUsernameKey: 'username_prod'

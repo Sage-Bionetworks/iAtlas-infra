@@ -4,6 +4,7 @@ dependencies:
   - common/iatlasvpc.yaml
   - staging/iatlas-api-certificate.yaml
   - staging/iatlas-api-hostedzone.yaml
+  - staging/iatlas-db.yaml
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
   InstanceType: 't3a.medium'
@@ -23,4 +24,8 @@ parameters:
   DockerImageTag: {{stack_group_config.docker_image_tag}}
   FlaskEnv: 'staging'
   CertificateArn: !stack_output_external iatlas-api-certificate-staging::CertificateArn
-  DomainName: '{{stack_group_config.sub_domain_name}}.{{stack_group_config.domain_name}}'
+  DomainName: '{{stack_group_config.sub_domain_name_staging}}.{{stack_group_config.domain_name_staging}}'
+  DbHost: !stack_output_external iatlasdb-staging::ClusterReadEndpoint
+  SecretDbNameKey: 'dbname_staging'
+  SecretPasswordKey: 'password_staging'
+  SecretUsernameKey: 'username_staging'

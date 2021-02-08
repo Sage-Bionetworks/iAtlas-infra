@@ -1,9 +1,13 @@
 project_code: 'sage-bionetworks'
 profile: {{ var.profile | default('default') }}
 region: {{ var.region | default('us-east-1') }}
-docker_image_tag: {{ environment_variable.DOCKER_IMAGE_TAG | default('8847ae76-staging') }}
-domain_name: {{ environment_variable.DOMAIN_NAME | default('genui.dev') }}
-sub_domain_name: {{ environment_variable.SUB_DOMAIN_NAME | default('sage-api') }}
+docker_image_tag: {{ environment_variable.DOCKER_IMAGE_TAG | default('') }}
+domain_name: !ssm /iatlas/prod/domain_name
+sub_domain_name: !ssm /iatlas/prod/api_sub_domain_name
+domain_name_staging: !ssm /iatlas/staging/domain_name
+sub_domain_name_staging: !ssm /iatlas/staging/api_sub_domain_name
+# DO NOT store the token in git.
+gitlab_reg_token: {{ environment_variable.GITLAB_REG_TOKEN | default('') }}
 template_bucket_name: 'bootstrap-awss3cloudformationbucket-114n2ojlbvj21'
 template_key_prefix: {{ environment_variable.TRAVIS_BRANCH | default('testing') }}
 admincentral_cf_bucket: 'bootstrap-awss3cloudformationbucket-19qromfd235z9'

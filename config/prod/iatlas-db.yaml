@@ -7,8 +7,8 @@ stack_tags: {{stack_group_config.stack_tags}}
 parameters:
   VpcName: iatlasvpc
   KmsKeyName: !stack_output_external iatlas-kms-prod::KmsKey
-  MasterUsername: !ssm /iatlas/prod/AuroraUsername
-  MasterUserPassword: !ssm /iatlas/prod/AuroraPassword
+  AuroraUserKey: 'username_prod'
+  AuroraPassKey: 'password_prod'
   DBInstanceClass: 'db.t3.large'
   DBEngineVersion: '11.7'
   DBPort: '5432'
