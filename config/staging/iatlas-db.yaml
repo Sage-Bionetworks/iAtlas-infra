@@ -6,9 +6,9 @@ dependencies:
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
   VpcName: iatlasvpc
-  KmsKeyName: !stack_output_external iatlas-kms-staging::KmsKey
-  AuroraUserKey: 'username_staging'
-  AuroraPassKey: 'password_staging'
+  KmsKey: !stack_output_external iatlas-kms-staging::KmsKey
+  DbSecretPrefix: 'staging_'
+  DbCredsName: 'iatlas_db_creds_encrypted_staging'
   DBInstanceClass: 'db.t3.large'
   DBEngineVersion: '11.7'
   DBPort: '5432'

@@ -4,6 +4,7 @@ dependencies:
   - common/iatlasvpc.yaml
   - staging/iatlas-api-certificate.yaml
   - staging/iatlas-api-hostedzone.yaml
+  - staging/iatlas-kms.yaml
   - staging/iatlas-db.yaml
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
@@ -26,6 +27,10 @@ parameters:
   CertificateArn: !stack_output_external iatlas-api-certificate-staging::CertificateArn
   DomainName: '{{stack_group_config.sub_domain_name_staging}}.{{stack_group_config.domain_name_staging}}'
   DbHost: !stack_output_external iatlasdb-staging::ClusterReadEndpoint
+  DbPort: !stack_output_external iatlasdb-staging::ClusterPort
+  DbAccessSecurityGroup: !stack_output_external iatlasdb-staging::DBAccessSecurityGroup
+  DbCredsSecret: !stack_output_external iatlasdb-staging::DbCredsName
+  KmsKeyArn: !stack_output_external iatlas-kms-staging::KmsKeyArn
   SecretDbNameKey: 'dbname_staging'
   SecretPasswordKey: 'password_staging'
   SecretUsernameKey: 'username_staging'

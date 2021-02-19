@@ -5,15 +5,17 @@ Parameters:
   VpcName:
     Description: 'Name of an existing VPC to run the instance in'
     Type: String
-  KmsKeyName:
+  KmsKey:
     Description: 'Encryption key to use for storage'
     Type: String
-  AuroraUserKey:
-    Description: The key for the secret Prod Aurora DB username value in the Secrets Manager.
+  DbSecretPrefix:
+    Default: ''
+    Description: A prefix for the secret values in the Secrets Manager.
     NoEcho: 'true'
     Type: String
-  AuroraPassKey:
-    Description: The key for the secret Prod Aurora DB password value in the Secrets Manager.
+  DbCredsName:
+    Default: 'iatlas_db_creds_encrypted'
+    Description: The name for the secret Aurora DB credentials in the Secrets Manager.
     NoEcho: 'true'
     Type: String
   DBInstanceClass:
@@ -40,7 +42,9 @@ Parameters:
     MaxValue: 65535
 
 Resources:
-
+  #############
+  ### Roles ###
+  #############
   MonitoringIAMRole:
     Type: AWS::IAM::Role
     Properties:
@@ -58,13 +62,17 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
 
+  ##############
+  ### Groups ###
+  ##############
   DBAccessSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
       VpcId: !ImportValue
         'Fn::Sub': '${AWS::Region}-${VpcName}-VPCId'
       GroupDescription: Instances with access to DB servers
-
+      # The GroupName must be defined so that it may be passed via the gitlab-runner config.
+      GroupName: !Sub '${AWS::StackName}-DBAccessSecurityGroup'
   ClusterSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -77,7 +85,6 @@ Resources:
           ToPort: !Ref DBPort
           SourceSecurityGroupId: !Ref DBAccessSecurityGroup
           Description: 'Access from runner to DB ports'
-
   ClusterSecurityGroupIngress:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
@@ -85,7 +92,6 @@ Resources:
       IpProtocol: '-1'
       SourceSecurityGroupId: !Ref ClusterSecurityGroup
       Description: 'Self Reference'
-
   DBSubnetGroup:
     Type: AWS::DocDB::DBSubnetGroup
     Properties:
@@ -97,7 +103,6 @@ Resources:
           'Fn::Sub': '${AWS::Region}-${VpcName}-PrivateSubnet1'
         - !ImportValue
           'Fn::Sub': '${AWS::Region}-${VpcName}-PrivateSubnet2'
-
   RDSDBClusterParameterGroup:
     Type: AWS::RDS::DBClusterParameterGroup
     Properties:
@@ -105,7 +110,6 @@ Resources:
       Family: aurora-postgresql11
       Parameters:
         rds.force_ssl: 1
-
   DBParameterGroup:
     Type: AWS::RDS::DBParameterGroup
     Properties:
@@ -115,6 +119,28 @@ Resources:
 # https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Reference.html#AuroraPostgreSQL.Reference.ParameterGroups
 #     Parameters:
 
+  ###############
+  ### Secrets ###
+  ###############
+  DbCredentialSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: Username and password for database
+      KmsKeyId: !Ref KmsKey
+      Name: !Ref 'DbCredsName'
+      GenerateSecretString:
+        SecretStringTemplate: !Sub '{"username": "${DbSecretPrefix}iatlas", "db_name": "${DbSecretPrefix}iatlas"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 42
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: True
+      Tags:
+        - Key: Name
+          Value: db-secret
+
+  #############################
+  ### DB Cluster & Instance ###
+  #############################
   DBCluster:
     Type: AWS::RDS::DBCluster
     DeletionPolicy: Delete
@@ -123,8 +149,8 @@ Resources:
       Engine: aurora-postgresql
       EngineVersion: !Ref DBEngineVersion
       Port: !Ref DBPort
-      MasterUsername: !Sub '{{resolve:secretsmanager:arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:iatlas_db_creds_encrypted:${AuroraUserKey}'
-      MasterUserPassword: !Sub '{{resolve:secretsmanager:arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:iatlas_db_creds_encrypted:${AuroraPassKey}'
+      MasterUsername: !Sub '{{resolve:secretsmanager:${DbCredentialSecret}:SecretString:username}}'
+      MasterUserPassword: !Sub '{{resolve:secretsmanager:${DbCredentialSecret}:SecretString:password}}'
       DBSubnetGroupName: !Ref DBSubnetGroup
       DBClusterParameterGroupName: !Ref RDSDBClusterParameterGroup
       StorageEncrypted: true
@@ -133,8 +159,6 @@ Resources:
         - !Ref ClusterSecurityGroup
         - !ImportValue
           'Fn::Sub': '${AWS::Region}-${VpcName}-VpnSecurityGroup'
-#       - !Ref DBAccessSecurityGroup
-
   DBInstance:
     Type: AWS::RDS::DBInstance
     Properties:
@@ -143,7 +167,7 @@ Resources:
       Engine: aurora-postgresql
       EngineVersion: !Ref DBEngineVersion
       AutoMinorVersionUpgrade: true
-      PerformanceInsightsKMSKeyId: !Ref KmsKeyName
+      PerformanceInsightsKMSKeyId: !Ref KmsKey
       PerformanceInsightsRetentionPeriod: 7
       PubliclyAccessible: false
       EnablePerformanceInsights: true
@@ -170,7 +194,16 @@ Outputs:
     Value: !Ref DBAccessSecurityGroup
     Export:
       Name: !Sub '${AWS::Region}-${AWS::StackName}-DBAccessSecurityGroup'
+  DBAccessSecurityGroupName:
+    Description: 'The explicit name of the Security Group so that it may be referenced in the gitlab-runner config.'
+    Value: !Sub '${AWS::StackName}-DBAccessSecurityGroup'
+    Export:
+      Name: !Sub '${AWS::Region}-${AWS::StackName}-DBAccessSecurityGroupName'
   ClusterSecurityGroup:
     Value: !Ref ClusterSecurityGroup
     Export:
       Name: !Sub '${AWS::Region}-${AWS::StackName}-ClusterSecurityGroup'
+  DbCredsName:
+    Value: !Ref DbCredsName
+    Export:
+      Name: !Sub '${AWS::Region}-${AWS::StackName}-DbCredsName'

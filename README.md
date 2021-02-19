@@ -5,9 +5,9 @@ Infrastructure to support the iAtlas project
 ## Design
 
 These resources are created by sceptre:
-config/common includes the vpc and network attachments for the project
-config/staging launches an aurora postgresql resource, gitlab runner instance, and kms key
-config/prod launches another aurora postgresql resource, gitlab runner instance, and kms key
+config/common includes the vpc and network attachments for the project. Also launches the GitLab runner instance.
+config/staging launches an aurora postgresql resource, kms key, and the api app for the staging environment.
+config/prod launches an aurora postgresql resource, kms key, and the api app for the production environment.
 
 ![alt text][architecture]
 
@@ -49,18 +49,6 @@ The stacks expect the following keys to have values in the System Manager Proper
 
 For the API to access the database the following secrets must be created in the [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/)
 
-- `iatlas_api_creds_encrypted`
-
-  with values for:
-  - `dbname_staging`
-  - `password_staging`
-  - `username_staging`
-  - `dbname_prod`
-  - `password_prod`
-  - `username_prod`
-
-  These are readonly credentials for the api to read from the database.
-
 - `iatlas_gitlab_registry_creds`
 
   with values for:
@@ -68,16 +56,6 @@ For the API to access the database the following secrets must be created in the 
   - `password`
 
   These are readonly credentials for accessing the container registry in GitLab. The username and password (deploy token) are generated in [GitLab](https://gitlab.com/groups/cri-iatlas/-/settings/repository#js-deploy-tokens)
-
-- `iatlas_db_creds_encrypted`
-
-  with values for:
-  - `username_prod`
-  - `password_prod`
-  - `username_staging`
-  - `password_staging`
-
-  These are admin credentials for the database (Prod and Staging respectively).
 
 ### Manual Deploys
 
@@ -92,7 +70,7 @@ The following MUST be created initially for the CI/CD to work in GitLab:
   - `prod/iatlas-kms.yaml`
   - `prod/iatlas-api-db.yaml`
 
-  The Staging and Prod database instances are needed so that the GitLab runner will know the host to connect to for each. The host is a subnet and not available outside the VPC.
+  The Staging and Prod database instances are needed so that the host values for each may be passed to the GitLab Runner. The host is a subnet and not available outside the VPC.
 
   The KMS stacks are needed for the Databases.
 
