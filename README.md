@@ -29,19 +29,19 @@ to read secrets from the parameter store and interact with the Aurora cluster.
 
 The stacks expect the following keys to have values in the System Manager Property Store (SSM)
 
-- `/iatlas/prod/domain_name`
+- `/iatlas/prod/domain`
 
   The domain name where iAtlas apps may be accessed in Prod (ie `cri-iatlas.org`).
 
-- `/iatlas/prod/api_sub_domain_name`
+- `/iatlas/prod/api_sub_domain`
 
   The sub domain name where iAtlas API may be accessed in Prod (ie `api` to create a full domain like `api.cri-iatlas.org`).
 
-- `/iatlas/staging/domain_name`
+- `/iatlas/staging/domain`
 
   The domain name where iAtlas apps may be accessed in Staging (ie `cri-iatlas.dev`).
 
-- `/iatlas/staging/api_sub_domain_name`
+- `/iatlas/staging/api_sub_domain`
 
   The sub domain name where iAtlas API may be accessed in Staging (ie `api` to create a full domain like `api.cri-iatlas.dev`).
 
