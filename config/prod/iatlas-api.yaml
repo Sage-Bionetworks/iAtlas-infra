@@ -33,6 +33,9 @@ parameters:
   DbCredsArn: !stack_output_external iatlasdb-prod::DbCredsArn
   KmsKeyArn: !stack_output_external iatlas-kms-prod::KmsKeyArn
 hooks:
-  before_launch:
+  before_create:
+    # Ensure this template is downloaded even in CI.
+    - !cmd 'curl https://{{stack_group_config.admincentral_cf_bucket}}.s3.amazonaws.com/aws-infra/master/vpc-mini.yaml --create-dirs -o templates/remote/vpc-mini.yaml'
+  before_update:
     # Ensure this template is downloaded even in CI.
     - !cmd 'curl https://{{stack_group_config.admincentral_cf_bucket}}.s3.amazonaws.com/aws-infra/master/vpc-mini.yaml --create-dirs -o templates/remote/vpc-mini.yaml'
