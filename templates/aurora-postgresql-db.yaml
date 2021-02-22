@@ -203,7 +203,7 @@ Outputs:
     Value: !Ref ClusterSecurityGroup
     Export:
       Name: !Sub '${AWS::Region}-${AWS::StackName}-ClusterSecurityGroup'
-  DbCredsName:
-    Value: !Ref DbCredsName
+  DbCredsArn:
+    Value: !Ref 'DbCredentialSecret'
     Export:
-      Name: !Sub '${AWS::Region}-${AWS::StackName}-DbCredsName'
+      Name: !Sub '${AWS::Region}-${AWS::StackName}-DbCredsArn'

@@ -3,9 +3,16 @@ Parameters:
   KeyName:
     Type: AWS::EC2::KeyPair::KeyName
     Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS instances.
-  DomainName:
+  HostedZone:
     Type: String
-    Description: The identification string that defines the internet facing app.
+    Description: The hosted zone in Route 53 for the Load balancer.
+  SubDomainName:
+    Default: '*'
+    Description: Sub domain (default is '*') (i.e. "api" of api.cri-iatlas.org)
+    Type: String
+  DomainName:
+    Description: The domain name (i.e. sagebionetworks.org)
+    Type: String
   CertificateArn:
     Type: String
     Description: ARN of the Certificate.
@@ -15,10 +22,10 @@ Parameters:
   BastionHostSgId:
     Type: String
     Description: The ID of the security group for bastion hosts
-  PublicSubnetId:
+  PublicSubnetIds:
     Type: List<AWS::EC2::Subnet::Id>
     Description: Public subnet IDs from the VPC for ALB placement. Minimum of two.
-  PrivateSubnetId:
+  PrivateSubnetIds:
     Type: List<AWS::EC2::Subnet::Id>
     Description: Private subnet IDs from the VPC for ECS node placement. Minimum of two.
   DesiredCapacity:
@@ -67,23 +74,28 @@ Parameters:
   DbHost:
     Type: String
     Description: The reader endpoint for the DB cluster. For example - mystack-mydbcluster-ro-123456789012.us-east-2.rds.amazonaws.com
-  SecretDbNameKey:
-    Description: The key for the secret DB name value in the Secrets Manager.
+    NoEcho: true
+  DbPort:
+    Type: Number
+    Description: The port of the DB cluster.
+    Default: 5432
+    NoEcho: true
+  DbAccessSecurityGroup:
+    Type: String
+    Description: The DB Security Group.
+  DbCredsArn:
+    Description: The ARN of the Database secret in the Secret Manager
     NoEcho: 'true'
     Type: String
-  SecretPasswordKey:
-    Description: The key for the secret DB password value in the Secrets Manager.
-    NoEcho: 'true'
-    Type: String
-  SecretUsernameKey:
-    Description: The key for the secret DB username value in the Secrets Manager.
-    NoEcho: 'true'
+  KmsKeyArn:
+    Description: 'Encryption key ARN to use for storage'
     Type: String
 Resources:
   ########################
   ### Managed Policies ###
   ########################
-  AccessRegCredSecretPolicy:
+  # This is necessary so it can read the Secrets Manager entry that contains the external registry credentials.
+  AccessSecretPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       PolicyDocument:
@@ -91,19 +103,18 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - ssm:GetParameters
-              - secretsmanager:GetSecretValue
               - kms:Decrypt
+              - secretsmanager:GetSecretValue
+              - ssm:GetParameters
             Resource:
-              - !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*'
-              - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted-??????'
+              - !Ref 'KmsKeyArn'
+              - !Ref 'DbCredsArn'
               - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_gitlab_registry_creds-??????'
               - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
           - Effect: Allow
             Action:
               - logs:CreateLogStream
             Resource: '*'
-
   EcsServicePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -120,7 +131,6 @@ Resources:
               - 'ec2:Describe*'
               - 'ec2:AuthorizeSecurityGroupIngress'
             Resource: '*'
-
   Ec2Policy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -139,7 +149,6 @@ Resources:
               - 'logs:CreateLogStream'
               - 'logs:PutLogEvents'
             Resource: '*'
-
   AutoScalingServicePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -159,13 +168,11 @@ Resources:
   ### Roles ###
   #############
   # iAtlas API task execution IAM role
-  # This is necessary so it can read the Secrets Manager entry that contains the external
-  # registry credentials
   IAtlasIAMExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       ManagedPolicyArns:
-        - !Ref AccessRegCredSecretPolicy
+        - !Ref 'AccessSecretPolicy'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -176,10 +183,11 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Path: /
-  ECSServiceRole:
+  EcsServiceRole:
     Type: AWS::IAM::Role
     Properties:
       ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
         - !Ref EcsServicePolicy
       AssumeRolePolicyDocument:
         Statement:
@@ -217,14 +225,12 @@ Resources:
   ### Groups ###
   ##############
   # Security group for ECS nodes
-  # Should allow ephemeral ports from the ALB SG
-  # Should allow SSH from the Bastion hosts security group
   EcsSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: ECS Node Security Group
       VpcId: !Ref 'VpcId'
-
+  # Should allow ephemeral ports from the ALB SG
   EcsSecurityGroupAlbPorts:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -233,7 +239,7 @@ Resources:
       FromPort: 31000
       ToPort: 61000
       SourceSecurityGroupId: !Ref 'EcsAlbSecurityGroup'
-
+  # Should allow SSH from the Bastion hosts security group
   EcsSecurityGroupSSHfromBastion:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -242,15 +248,12 @@ Resources:
       FromPort: 22
       ToPort: 22
       SourceSecurityGroupId: !Ref 'BastionHostSgId'
-
   # Security group for the ALB that goes in front
-  # Should only allow port 443 from the world
   EcsAlbSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Load Balancer for ECS security group
       VpcId: !Ref 'VpcId'
-
   EcsAlbSecurityGroupHttpsInbound:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -259,46 +262,46 @@ Resources:
       FromPort: 443
       ToPort: 443
       CidrIp: 0.0.0.0/0
-
   CloudwatchLogsGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Join ['-', [ECSLogGroup, !Ref 'AWS::StackName']]
+      LogGroupName: !Sub 'EcsLogGroup-${AWS::StackName}'
       RetentionInDays: 14
-
-  ECSAutoScalingGroup:
+  EcsAutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      VPCZoneIdentifier: !Ref 'PrivateSubnetId'
+      VPCZoneIdentifier: !Ref 'PrivateSubnetIds'
       LaunchConfigurationName: !Ref 'ContainerInstances'
       MinSize: !Ref 'MinSize'
       MaxSize: !Ref 'MaxSize'
       DesiredCapacity: !Ref 'DesiredCapacity'
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}
+          PropagateAtLaunch: true
     CreationPolicy:
       ResourceSignal:
         Timeout: PT15M
     UpdatePolicy:
       AutoScalingReplacingUpdate:
         WillReplace: true
-
-  ECSTG:
+  EcsTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    DependsOn: ECSALB
+    DependsOn: EcsAlb
     Properties:
       HealthCheckIntervalSeconds: 10
       HealthCheckPath: /healthcheck
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
-      Name: ECSTG
+      Name: EcsTargetGroup
       Port: 80
       Protocol: HTTP
       UnhealthyThresholdCount: 2
       VpcId: !Ref 'VpcId'
 
-  # The 'Family' property is key here, it tells ECS to increment the version rather
-  # than create a new Task Definition
-  taskDefinition:
+  # The 'Family' property is key here, it tells ECS to increment the version rather than create a new Task Definition
+  TaskDef:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: !Ref 'AWS::StackName'
@@ -307,7 +310,7 @@ Resources:
         - Name: iatlas-api
           Cpu: 100
           Essential: true
-          Image: !Join [':', ['registry.gitlab.com/cri-iatlas/iatlas-api', !Ref 'DockerImageTag']]
+          Image: !Sub 'registry.gitlab.com/cri-iatlas/iatlas-api:${DockerImageTag}'
           RepositoryCredentials:
             CredentialsParameter: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_gitlab_registry_creds'
           Memory: 300
@@ -324,15 +327,17 @@ Resources:
               Value: !Ref 'FlaskEnv'
             - Name: POSTGRES_HOST
               Value: !Ref 'DbHost'
+            - Name: POSTGRES_PORT
+              Value: !Ref 'DbPort'
           Secrets:
             - Name: POSTGRES_DB
-              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:${SecretDbNameKey}::'
+              ValueFrom: !Sub '${DbCredsArn}:db_name::'
             - Name: POSTGRES_USER
-              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:${SecretUsernameKey}::'
+              ValueFrom: !Sub '${DbCredsArn}:username::'
             - Name: POSTGRES_PASSWORD
-              ValueFrom: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_api_creds_encrypted:${SecretPasswordKey}::'
+              ValueFrom: !Sub '${DbCredsArn}:password::'
 
-  ECSCluster:
+  EcsCluster:
     Type: AWS::ECS::Cluster
 
   ListenerCertificate:
@@ -343,19 +348,19 @@ Resources:
       ListenerArn: !Ref AlbHttpsListener
 
   # ALB Load Balancer
-  ECSALB:
+  EcsAlb:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Scheme: internet-facing
       LoadBalancerAttributes:
         - Key: idle_timeout.timeout_seconds
           Value: '30'
-      Subnets: !Ref 'PublicSubnetId'
+      Subnets: !Ref 'PublicSubnetIds'
       SecurityGroups: [!Ref 'EcsAlbSecurityGroup']
   # The LoadBalancer listener for HTTP redirects to HTTPS.
   AlbHttpListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
-    DependsOn: ECSServiceRole
+    DependsOn: EcsServiceRole
     Properties:
       DefaultActions:
         - Order: 1
@@ -367,77 +372,87 @@ Resources:
             Path: '/#{path}'
             Query: '#{query}'
             StatusCode: 'HTTP_301'
-      LoadBalancerArn: !Ref 'ECSALB'
+      LoadBalancerArn: !Ref 'EcsAlb'
       Port: 80
       Protocol: 'HTTP'
   # The HTTPS loadBalancer listener does the actual forwarding.
   AlbHttpsListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
-    DependsOn: ECSServiceRole
+    DependsOn: EcsServiceRole
     Properties:
       DefaultActions:
         - Order: 1
           Type: 'forward'
-          TargetGroupArn: !Ref 'ECSTG'
-      LoadBalancerArn: !Ref 'ECSALB'
+          TargetGroupArn: !Ref 'EcsTargetGroup'
+      LoadBalancerArn: !Ref 'EcsAlb'
       Port: 443
       Protocol: 'HTTPS'
       SslPolicy: 'ELBSecurityPolicy-2016-08'
       Certificates:
         - CertificateArn: !Ref CertificateArn
   # Associate the domain name with the loadBalancer.
-  iatlasDNS:
+  iAtlasDNS:
     Type: AWS::Route53::RecordSetGroup
     Properties:
-      HostedZoneName: !Sub '${DomainName}.'
-      Comment: Zone apex alias targeted to ECSALB LoadBalancer.
+      HostedZoneId: !Ref HostedZone
+      Comment: Zone apex alias targeted to EcsAlb LoadBalancer.
       RecordSets:
-        - Name: !Sub '${DomainName}.'
+        - Name: !Sub '${SubDomainName}.${DomainName}'
           Type: A
           AliasTarget:
-            HostedZoneId: !GetAtt 'ECSALB.CanonicalHostedZoneID'
-            DNSName: !GetAtt 'ECSALB.DNSName'
+            HostedZoneId: !GetAtt 'EcsAlb.CanonicalHostedZoneID'
+            DNSName: !GetAtt 'EcsAlb.DNSName'
   ContainerInstances:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Ref 'LatestEcsAmiId'
-      SecurityGroups: [!Ref 'EcsSecurityGroup']
+      SecurityGroups:
+        - !Ref 'EcsSecurityGroup'
+        - !Ref 'DbAccessSecurityGroup'
       InstanceType: !Ref 'InstanceType'
       IamInstanceProfile: !Ref 'EC2InstanceProfile'
       KeyName: !Ref 'KeyName'
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
-          echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
+          echo ECS_CLUSTER=${EcsCluster} >> /etc/ecs/ecs.config
           echo ECS_ENABLE_AWSLOGS_EXECUTIONROLE_OVERRIDE=true >> /etc/ecs/ecs.config
           yum install -y aws-cfn-bootstrap
-          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource ECSAutoScalingGroup --region ${AWS::Region}
-  service:
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource EcsAutoScalingGroup --region ${AWS::Region}
+  EcsService:
     Type: AWS::ECS::Service
     DependsOn:
       - AlbHttpListener
       - AlbHttpsListener
     Properties:
-      Cluster: !Ref 'ECSCluster'
+      Cluster: !Ref 'EcsCluster'
       DesiredCount: 1
       LoadBalancers:
         - ContainerName: iatlas-api
           ContainerPort: 80
-          TargetGroupArn: !Ref 'ECSTG'
-      Role: !Ref 'ECSServiceRole'
-      TaskDefinition: !Ref 'taskDefinition'
+          TargetGroupArn: !Ref 'EcsTargetGroup'
+      Role: !Ref 'EcsServiceRole'
+      TaskDefinition: !Ref 'TaskDef'
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
       Roles: [!Ref 'EC2Role']
 Outputs:
-  ecsservice:
-    Value: !Ref 'service'
-  ecscluster:
-    Value: !Ref 'ECSCluster'
-  ECSALB:
+  EcsService:
+    Value: !Ref 'EcsService'
+    Export:
+      Name: !Sub '${AWS::Region}-${AWS::StackName}-EcsService'
+  EcsCluster:
+    Value: !Ref 'EcsCluster'
+    Export:
+      Name: !Sub '${AWS::Region}-${AWS::StackName}-EcsCluster'
+  EcsAlb:
     Description: Your ALB DNS URL
-    Value: !Join ['', [!GetAtt [ECSALB, DNSName]]]
-  taskdef:
-    Value: !Ref 'taskDefinition'
+    Value: !GetAtt 'EcsAlb.DNSName'
+    Export:
+      Name: !Sub '${AWS::Region}-${AWS::StackName}-EcsAlb'
+  TaskDef:
+    Value: !Ref 'TaskDef'
+    Export:
+      Name: !Sub '${AWS::Region}-${AWS::StackName}-TaskDef'

@@ -3,6 +3,7 @@ stack_name: iatlas-api-hostedzone-staging
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
   Department: {{stack_group_config.stack_tags.Department}}
-  DnsDomainName: '{{stack_group_config.sub_domain_name_staging}}.{{stack_group_config.domain_name_staging}}'
+  SubDomainName: {{stack_group_config.sub_domain_name_staging}}
+  DomainName: {{stack_group_config.domain_name_staging}}
   OwnerEmail: {{stack_group_config.stack_tags.OwnerEmail}}
   Project: {{stack_group_config.stack_tags.Project}}

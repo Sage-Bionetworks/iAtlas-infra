@@ -151,11 +151,11 @@ Parameters:
     Description: The port of the DB cluster for staging.
     Default: 5432
     NoEcho: true
-  DbCredsSecretProd:
+  DbCredsArnProd:
     Description: The name of the Database secret in the Secret Manager for Prod.
     NoEcho: 'true'
     Type: String
-  DbCredsSecretStaging:
+  DbCredsArnStaging:
     Description: The name of the Database secret in the Secret Manager for Staging.
     NoEcho: 'true'
     Type: String
@@ -196,6 +196,9 @@ Resources:
           - Effect: 'Allow'
             Action:
               - 's3:ListBucket'
+              - 's3:AbortMultipartUpload'
+              - 's3:ListMultipartUploadParts'
+              - 's3:ListBucketMultipartUploads'
             Resource:
               - !GetAtt 'CacheBucket.Arn'
   RunnerPolicy:
@@ -207,31 +210,39 @@ Resources:
           - Effect: 'Allow'
             Action:
               - 'ec2:*'
-            Resource:
-              - '*'
+            Resource: '*'
+            Condition:
+              StringEqualsIfExists:
+                'ec2:Region': !Ref 'AWS::Region'
+              ArnEqualsIfExists:
+                'ec2:Vpc': !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${VpcId}'
           - Effect: 'Allow'
             Action:
               - 'ec2:CreateTags'
               - 'ssm:UpdateInstanceInformation'
-            Resource:
-              - '*'
+            Resource: '*'
             Condition:
-              StringEquals:
-                'ec2:Region': !Ref 'AWS::Region'
+              StringEqualsIfExists:
                 'ec2:InstanceType': !Ref 'GitLabRunnerInstanceType'
+                'ec2:Region': !Ref 'AWS::Region'
+                'ec2:Tenancy': 'default'
+              ArnEqualsIfExists:
+                'ec2:Vpc': !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${VpcId}'
+                'ec2:InstanceProfile': !GetAtt 'RunnersInstanceProfile.Arn'
               StringLike:
                 'aws:RequestTag/Name': '*gitlab-docker-machine-*'
               ForAllValues:StringEquals:
                 'aws:TagKeys': ['Name']
           - Effect: 'Allow'
             Action:
-              - 'ec2:RunInstances'
-              - 'ec2:RequestSpotInstances'
-              - 'ec2:CreateVolume'
               - 'ec2:AttachVolume'
+              - 'ec2:CreateVolume'
               - 'ec2:DetachVolume'
+              - 'ec2:RequestSpotInstances'
+              - 'ec2:RunInstances'
             Resource:
-              - '*'
+              - !Sub 'arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:*'
+              - !Sub 'arn:aws:ec2:${AWS::Region}::snapshot/*'
             Condition:
               StringEqualsIfExists:
                 'ec2:InstanceType': !Ref 'GitLabRunnerInstanceType'
@@ -242,12 +253,12 @@ Resources:
                 'ec2:InstanceProfile': !GetAtt 'RunnersInstanceProfile.Arn'
           - Effect: 'Allow'
             Action:
-              - 'ec2:TerminateInstances'
-              - 'ec2:StopInstances'
-              - 'ec2:StartInstances'
               - 'ec2:RebootInstances'
+              - 'ec2:StartInstances'
+              - 'ec2:StopInstances'
+              - 'ec2:TerminateInstances'
             Resource:
-              - '*'
+              - !Sub 'arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*'
             Condition:
               StringLike:
                 'ec2:ResourceTag/Name': '*gitlab-docker-machine-*'
@@ -271,8 +282,8 @@ Resources:
             Resource:
               - !Ref 'KmsKeyArnProd'
               - !Ref 'KmsKeyArnStaging'
-              - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${DbCredsSecretProd}-??????'
-              - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${DbCredsSecretStaging}-??????'
+              - !Ref 'DbCredsArnProd'
+              - !Ref 'DbCredsArnStaging'
           - Effect: Allow
             Action:
               - logs:CreateLogStream
@@ -428,65 +439,64 @@ Resources:
               owner: 'gitlab-runner'
               group: 'gitlab-runner'
               mode: '000600'
-              content:
-                Fn::Sub:
-                  - |
-                    [[runners]]
-                      limit = ${GitLabMaxConcurrentBuilds}
-                      environment = [
-                        "DOCKER_DRIVER=overlay2",
-                        "DOCKER_TLS_CERTDIR=/certs",
-                        "DB_HOST_PROD=${DbHostProd}",
-                        "DB_HOST_STAGING=${DbHostStaging}",
-                        "DB_PORT_PROD=${DbPortProd}",
-                        "DB_PORT_STAGING=${DbPortStaging}"
+              content: !Sub
+                - |
+                  [[runners]]
+                    limit = ${GitLabMaxConcurrentBuilds}
+                    environment = [
+                      "DOCKER_DRIVER=overlay2",
+                      "DOCKER_TLS_CERTDIR=/certs",
+                      "DB_HOST_PROD=${DbHostProd}",
+                      "DB_HOST_STAGING=${DbHostStaging}",
+                      "DB_PORT_PROD=${DbPortProd}",
+                      "DB_PORT_STAGING=${DbPortStaging}"
+                    ]
+                    [runners.docker]
+                      tls_verify = false
+                      image = "${GitLabDockerImage}"
+                      privileged = true
+                      disable_cache = true
+                      shm_size = 0
+                    [runners.cache]
+                      Type = "s3"
+                      Shared = true
+                    [runners.cache.s3]
+                      ServerAddress = "s3.${AWS::URLSuffix}"
+                      BucketName = "${CacheBucket}"
+                      BucketLocation = "${AWS::Region}"
+                    [runners.machine]
+                      IdleCount = ${GitLabIdleCount}
+                      IdleTime = ${GitLabIdleTime}
+                      MaxBuilds = ${GitLabMaxBuilds}
+                      MachineDriver = "amazonec2"
+                      MachineName = "gitlab-docker-machine-%s"
+                      MachineOptions = [
+                        "amazonec2-instance-type=${GitLabRunnerInstanceType}",
+                        "amazonec2-region=${AWS::Region}",
+                        "amazonec2-zone=a",
+                        "amazonec2-vpc-id=${VpcId}",
+                        "amazonec2-subnet-id=${PrivateSubnet}",
+                        "amazonec2-security-group=${AWS::StackName}-RunnersDockerSecurityGroup",
+                        "amazonec2-security-group=${DBAccessSecurityGroupNameProd}",
+                        "amazonec2-security-group=${DBAccessSecurityGroupNameStaging}",
+                        "amazonec2-tags=${AWS::StackName}-runner,gitlab-aws-autoscaler,gitlab,true,gitlab-runner-autoscale,true",
+                        "amazonec2-use-private-address",
+                        "amazonec2-iam-instance-profile=${RunnersInstanceProfile}"${LocalSpotVar}
                       ]
-                      [runners.docker]
-                        tls_verify = false
-                        image = "${GitLabDockerImage}"
-                        privileged = true
-                        disable_cache = true
-                        shm_size = 0
-                      [runners.cache]
-                        Type = "s3"
-                        Shared = true
-                      [runners.cache.s3]
-                        ServerAddress = "s3.${AWS::URLSuffix}"
-                        BucketName = "${CacheBucket}"
-                        BucketLocation = "${AWS::Region}"
-                      [runners.machine]
+                      [[runners.machine.autoscaling]]
+                        Periods = ["* * 9-18 * * mon-fri *"]
                         IdleCount = ${GitLabIdleCount}
                         IdleTime = ${GitLabIdleTime}
-                        MaxBuilds = ${GitLabMaxBuilds}
-                        MachineDriver = "amazonec2"
-                        MachineName = "gitlab-docker-machine-%s"
-                        MachineOptions = [
-                          "amazonec2-instance-type=${GitLabRunnerInstanceType}",
-                          "amazonec2-region=${AWS::Region}",
-                          "amazonec2-zone=a",
-                          "amazonec2-vpc-id=${VpcId}",
-                          "amazonec2-subnet-id=${PrivateSubnet}",
-                          "amazonec2-security-group=${AWS::StackName}-RunnersDockerSecurityGroup",
-                          "amazonec2-security-group=${DBAccessSecurityGroupNameProd}",
-                          "amazonec2-security-group=${DBAccessSecurityGroupNameStaging}",
-                          "amazonec2-tags=${AWS::StackName}-runner,gitlab-aws-autoscaler,gitlab,true,gitlab-runner-autoscale,true",
-                          "amazonec2-use-private-address",
-                          "amazonec2-iam-instance-profile=${RunnersInstanceProfile}"${LocalSpotVar}
-                        ]
-                        [[runners.machine.autoscaling]]
-                          Periods = ["* * 9-18 * * mon-fri *"]
-                          IdleCount = ${GitLabIdleCount}
-                          IdleTime = ${GitLabIdleTime}
-                          Timezone = "${GitLabOffPeakTimezone}"
-                        [[runners.machine.autoscaling]]
-                          Periods = ["* * 0-8,18-23 * * mon-fri *", "* * * * * sat,sun *"]
-                          IdleCount = ${GitLabOffPeakIdleCount}
-                          IdleTime = ${GitLabOffPeakIdleTime}
-                          Timezone = "${GitLabOffPeakTimezone}"
-                  - LocalSpotVar: !If ['UseSpotInstances', ', "amazonec2-request-spot-instance=true", "amazonec2-spot-price=0.01"', '']
-                    PrivateSubnet: !Select
-                      - 0
-                      - !Ref PrivateSubnetIds
+                        Timezone = "${GitLabOffPeakTimezone}"
+                      [[runners.machine.autoscaling]]
+                        Periods = ["* * 0-8,18-23 * * mon-fri *", "* * * * * sat,sun *"]
+                        IdleCount = ${GitLabOffPeakIdleCount}
+                        IdleTime = ${GitLabOffPeakIdleTime}
+                        Timezone = "${GitLabOffPeakTimezone}"
+                - LocalSpotVar: !If ['UseSpotInstances', ', "amazonec2-request-spot-instance=true", "amazonec2-spot-price=0.01"', '']
+                  PrivateSubnet: !Select
+                    - 0
+                    - !Ref PrivateSubnetIds
             '/etc/cfn/cfn-hup.conf':
               owner: 'root'
               group: 'root'

@@ -10,16 +10,20 @@ Parameters:
   OwnerEmail:
     Type: String
     Description: The bucket owner's email address
-  DnsDomainName:
-    Description: A fully qualified domain name (i.e. sagebionetworks.org)
+  SubDomainName:
+    Default: '*'
+    Description: Sub domain (default is '*') for the hostedzone (i.e. "api" of api.cri-iatlas.org)
+    Type: String
+  DomainName:
+    Description: The domain name (i.e. sagebionetworks.org)
     Type: String
 Resources:
   HostedZone:
     Type: 'AWS::Route53::HostedZone'
     Properties:
       HostedZoneConfig:
-        Comment: !Sub 'Hosted zone for ${DnsDomainName}'
-      Name: !Join ['', [!Ref DnsDomainName, '.']]
+        Comment: !Sub 'Hosted zone for ${SubDomainName}.${DomainName}'
+      Name: !Sub '${SubDomainName}.${DomainName}'
       HostedZoneTags:
         - Key: 'Name'
           Value: !Ref AWS::StackName

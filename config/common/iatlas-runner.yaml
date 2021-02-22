@@ -18,8 +18,8 @@ parameters:
   DbHostStaging: !stack_output_external iatlasdb-staging::ClusterEndpoint
   DbPortProd: !stack_output_external iatlasdb-prod::ClusterPort
   DbPortStaging: !stack_output_external iatlasdb-staging::ClusterPort
-  DbCredsSecretProd: !stack_output_external iatlasdb-prod::DbCredsName
-  DbCredsSecretStaging: !stack_output_external iatlasdb-staging::DbCredsName
+  DbCredsArnProd: !stack_output_external iatlasdb-prod::DbCredsArn
+  DbCredsArnStaging: !stack_output_external iatlasdb-staging::DbCredsArn
   DBAccessSecurityGroupNameProd: !stack_output_external iatlasdb-prod::DBAccessSecurityGroupName
   DBAccessSecurityGroupNameStaging: !stack_output_external iatlasdb-staging::DBAccessSecurityGroupName
   KmsKeyArnProd: !stack_output_external iatlas-kms-prod::KmsKeyArn

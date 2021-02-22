@@ -2,30 +2,33 @@ template_path: ecs.yaml
 stack_name: iatlas-prod
 dependencies:
   - common/iatlasvpc.yaml
-  - prod/iatlas-api-certificate.yaml
-  - prod/iatlas-api-hostedzone.yaml
+  - prod/iatlas-kms.yaml
   - prod/iatlas-db.yaml
+  - prod/iatlas-api-hostedzone.yaml
+  - prod/iatlas-api-certificate.yaml
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
   InstanceType: 't3a.medium'
   KeyName: 'iatlas-api-prod' # For this to work, this key must be added in the SAGE AWS.
   VpcId: !stack_output_external iatlasvpc::VPCId
   BastionHostSgId: !stack_output_external iatlasvpc::BastianSecurityGroup
-  PublicSubnetId:
+  PublicSubnetIds:
     - !stack_output_external iatlasvpc::PublicSubnet
     - !stack_output_external iatlasvpc::PublicSubnet1
     - !stack_output_external iatlasvpc::PublicSubnet2
-  PrivateSubnetId:
+  PrivateSubnetIds:
     - !stack_output_external iatlasvpc::PrivateSubnet
     - !stack_output_external iatlasvpc::PrivateSubnet1
     - !stack_output_external iatlasvpc::PrivateSubnet2
-  DesiredCapacity: '1'
   MaxSize: '2'
   DockerImageTag: {{stack_group_config.docker_image_tag}}
   FlaskEnv: 'production'
   CertificateArn: !stack_output_external iatlas-api-certificate-prod::CertificateArn
-  DomainName: '{{stack_group_config.sub_domain_name}}.{{stack_group_config.domain_name}}'
-  DbHost: !stack_output_external iatlasdb-prod::ClusterReadEndpoint
-  SecretDbNameKey: 'dbname_prod'
-  SecretPasswordKey: 'password_prod'
-  SecretUsernameKey: 'username_prod'
+  HostedZone: !stack_output_external iatlas-api-hostedzone-prod::HostedZoneId
+  SubDomainName: {{stack_group_config.sub_domain_name}}
+  DomainName: {{stack_group_config.domain_name}}
+  DbHost: !stack_output_external iatlasdb-prod::ClusterEndpoint
+  DbPort: !stack_output_external iatlasdb-prod::ClusterPort
+  DbAccessSecurityGroup: !stack_output_external iatlasdb-prod::DBAccessSecurityGroup
+  DbCredsArn: !stack_output_external iatlasdb-prod::DbCredsArn
+  KmsKeyArn: !stack_output_external iatlas-kms-prod::KmsKeyArn
