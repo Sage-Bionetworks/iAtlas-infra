@@ -1,13 +1,13 @@
 project_code: 'sage-bionetworks'
 profile: {{ var.profile | default('default') }}
 region: {{ var.region | default('us-east-1') }}
-docker_image_tag: {{ environment_variable.DOCKER_IMAGE_TAG | default('') }}
+docker_image_tag: {{ environment_variable.DOCKER_IMAGE_TAG | default('staging-latest') }}
 domain_name: genui.dev
 sub_domain_name: sage-api
 domain_name_staging: genui.dev
 sub_domain_name_staging: sage-api-staging
 # DO NOT store the token in git.
-gitlab_reg_token: {{ environment_variable.GITLAB_REG_TOKEN | default('') }}
+gitlab_reg_token: {{ environment_variable.GITLAB_REG_TOKEN | default('NEVER_EVER_GONNA_GET_IT') }}
 # template_bucket_name: 'bootstrap-awss3cloudformationbucket-114n2ojlbvj21'
 template_bucket_name: 'bootstrap-awss3cloudformationbucket-228n2ojlbvj21'
 template_key_prefix: {{ environment_variable.TRAVIS_BRANCH | default('testing') }}
