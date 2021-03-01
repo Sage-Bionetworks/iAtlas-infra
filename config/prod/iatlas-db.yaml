@@ -10,5 +10,5 @@ parameters:
   DbSecretPrefix: 'prod_'
   DbCredsName: 'iatlas_db_creds_encrypted_prod'
   DBInstanceClass: 'db.t3.large'
-  DBEngineVersion: '11.7'
+  DBEngineVersion: '12.4'
   DBPort: '5432'

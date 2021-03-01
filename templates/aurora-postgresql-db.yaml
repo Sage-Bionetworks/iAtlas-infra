@@ -31,8 +31,7 @@ Parameters:
     Description: 'Database engine version'
     Type: String
     AllowedValues:
-      - 11.7
-      - 11.6
+      - 12.4
   DBPort:
     Description: TCP/IP Port for the Database Instance
     Type: Number
@@ -106,15 +105,15 @@ Resources:
   RDSDBClusterParameterGroup:
     Type: AWS::RDS::DBClusterParameterGroup
     Properties:
-      Description: !Join [ '- ', [ 'Aurora Parameter Group for  ', !Ref 'AWS::StackName' ] ]
-      Family: aurora-postgresql11
+      Description: !Sub 'Aurora Parameter Group for ${AWS::StackName} Cluster'
+      Family: aurora-postgresql12
       Parameters:
         rds.force_ssl: 1
   DBParameterGroup:
     Type: AWS::RDS::DBParameterGroup
     Properties:
-      Description: !Join [ '- ', [ 'Aurora Parameter Group for  ', !Ref 'AWS::StackName' ] ]
-      Family: aurora-postgresql11
+      Description: !Sub 'Aurora Parameter Group for ${AWS::StackName}'
+      Family: aurora-postgresql12
 # Currently not changing parameters from default values
 # https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Reference.html#AuroraPostgreSQL.Reference.ParameterGroups
 #     Parameters:
