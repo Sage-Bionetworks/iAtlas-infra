@@ -2,10 +2,10 @@ project_code: 'sage-bionetworks'
 profile: {{ var.profile | default('default') }}
 region: {{ var.region | default('us-east-1') }}
 docker_image_tag: {{ environment_variable.DOCKER_IMAGE_TAG | default('staging-latest') }}
-domain_name: genui.dev
-sub_domain_name: sage-api
-domain_name_staging: genui.dev
-sub_domain_name_staging: sage-api-staging
+domain_name: {{ environment_variable.DOMAIN_NAME | default('cri-iatlas.org') }}
+sub_domain_name: {{ environment_variable.SUB_DOMAIN_NAME | default('api') }}
+domain_name_staging: {{ environment_variable.DOMAIN_NAME_STAGING | default('cri-iatlas.org') }}
+sub_domain_name_staging: {{ environment_variable.SUB_DOMAIN_NAME_STAGING | default('api-staging') }}
 # DO NOT store the token in git.
 gitlab_reg_token: {{ environment_variable.GITLAB_REG_TOKEN | default('_NEVER_GONNA_GET_IT_') }}
 template_bucket_name: 'bootstrap-awss3cloudformationbucket-114n2ojlbvj21'
