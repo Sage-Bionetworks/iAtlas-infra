@@ -61,7 +61,6 @@ Parameters:
     Type: 'String'
     MinLength: '20'
     MaxLength: '20'
-    NoEcho: true
   GitLabRunnerInstanceType:
     Type: 'String'
     Description: Instance type for GitLab Runners.
