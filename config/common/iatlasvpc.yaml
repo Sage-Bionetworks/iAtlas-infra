@@ -8,10 +8,10 @@ parameters:
   PrivateSubnetZones: '{{stack_group_config.region}}a, {{stack_group_config.region}}b, {{stack_group_config.region}}c'
 hooks:
   before_launch:
-    - !cmd 'curl https://{{stack_group_config.admincentral_cf_bucket}}.s3.amazonaws.com/aws-infra/master/vpc-mini.yaml --create-dirs -o templates/remote/vpc-mini.yaml'
+    - !cmd 'curl https://{{stack_group_config.admincentral_cf_bucket}}.s3.amazonaws.com/aws-infra/master/VPC/vpc-mini.yaml --create-dirs -o templates/remote/vpc-mini.yaml'
   before_create:
     # Ensure this template is downloaded even in CI.
-    - !cmd 'curl https://{{stack_group_config.admincentral_cf_bucket}}.s3.amazonaws.com/aws-infra/master/vpc-mini.yaml --create-dirs -o templates/remote/vpc-mini.yaml'
+    - !cmd 'curl https://{{stack_group_config.admincentral_cf_bucket}}.s3.amazonaws.com/aws-infra/master/VPC/vpc-mini.yaml --create-dirs -o templates/remote/vpc-mini.yaml'
   before_update:
     # Ensure this template is downloaded even in CI.
-    - !cmd 'curl https://{{stack_group_config.admincentral_cf_bucket}}.s3.amazonaws.com/aws-infra/master/vpc-mini.yaml --create-dirs -o templates/remote/vpc-mini.yaml'
+    - !cmd 'curl https://{{stack_group_config.admincentral_cf_bucket}}.s3.amazonaws.com/aws-infra/master/VPC/vpc-mini.yaml --create-dirs -o templates/remote/vpc-mini.yaml'
