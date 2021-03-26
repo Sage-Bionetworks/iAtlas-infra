@@ -26,4 +26,3 @@ parameters:
   KmsKeyArnStaging: !stack_output_external iatlas-kms-staging::KmsKeyArn
   GitLabRegToken: {{stack_group_config.gitlab_reg_token}}
   GitLabRunnerInstanceType: 'c5d.2xlarge'
-on_failure: 'DO_NOTHING'
