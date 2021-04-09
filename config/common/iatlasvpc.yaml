@@ -9,9 +9,3 @@ parameters:
 hooks:
   before_launch:
     - !cmd "wget https://raw.githubusercontent.com/Sage-Bionetworks/aws-infra/master/templates/VPC/vpc-mini.yaml -N -P templates/remote"
-  before_create:
-    # Ensure this template is downloaded even in CI.
-   - !cmd "wget https://raw.githubusercontent.com/Sage-Bionetworks/aws-infra/master/templates/VPC/vpc-mini.yaml -N -P templates/remote"
-  before_update:
-    # Ensure this template is downloaded even in CI.
-    - !cmd "wget https://raw.githubusercontent.com/Sage-Bionetworks/aws-infra/master/templates/VPC/vpc-mini.yaml -N -P templates/remote"
