@@ -25,26 +25,6 @@ must be done manually.
 The GitLab runner is an EC2 instance that can use the KMS key connected to its environment
 to read secrets from the parameter store and interact with the Aurora cluster.
 
-### Property Store
-
-The stacks expect the following keys to have values in the System Manager Property Store (SSM)
-
-- `/iatlas/prod/domain`
-
-  The domain name where iAtlas apps may be accessed in Prod (ie `cri-iatlas.org`).
-
-- `/iatlas/prod/api_sub_domain`
-
-  The sub domain name where iAtlas API may be accessed in Prod (ie `api` to create a full domain like `api.cri-iatlas.org`).
-
-- `/iatlas/staging/domain`
-
-  The domain name where iAtlas apps may be accessed in Staging (ie `cri-iatlas.dev`).
-
-- `/iatlas/staging/api_sub_domain`
-
-  The sub domain name where iAtlas API may be accessed in Staging (ie `api` to create a full domain like `api.cri-iatlas.dev`).
-
 ### Secrets
 
 For the API to access the database the following secrets must be created in the [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/)
