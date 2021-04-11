@@ -1,15 +1,6 @@
 Description: Setup a hosted zone for DNS
 AWSTemplateFormatVersion: 2010-09-09
 Parameters:
-  Department:
-    Description: The department for this resource (i.e. Computational Oncology)
-    Type: String
-  Project:
-    Description: The name of the project that this resource is used for (i.e. Resilience)
-    Type: String
-  OwnerEmail:
-    Type: String
-    Description: The bucket owner's email address
   SubDomainName:
     Default: '*'
     Description: Sub domain (default is '*') for the hostedzone (i.e. "api" of api.cri-iatlas.org)
@@ -27,12 +18,6 @@ Resources:
       HostedZoneTags:
         - Key: 'Name'
           Value: !Ref AWS::StackName
-        - Key: 'Department'
-          Value: !Ref Department
-        - Key: 'Project'
-          Value: !Ref Project
-        - Key: 'OwnerEmail'
-          Value: !Ref OwnerEmail
 Outputs:
   HostedZoneId:
     Value: !Ref HostedZone
