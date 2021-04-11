@@ -19,6 +19,7 @@ Metadata:
           default: 'Runner'
         Parameters:
           - 'DbHost'
+          - 'DbPort'
           - 'GitLabDockerImage'
           - 'GitLabMaxBuilds'
           - 'GitLabMaxConcurrentBuilds'
@@ -141,12 +142,10 @@ Parameters:
     Type: String
     Description: The endpoint for the DB cluster. For example - mystack-mydbcluster-123456789012.us-east-2.rds.amazonaws.com
     Default: ''
-    NoEcho: true
   DbPort:
     Type: Number
     Description: The port of the DB cluster.
     Default: 5432
-    NoEcho: true
   DbCredsArn:
     Description: The name of the Database secret in the Secret Manager.
     NoEcho: 'true'
