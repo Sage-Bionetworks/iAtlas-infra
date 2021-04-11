@@ -96,8 +96,6 @@ region = us-west-2
 
 Install [Python](https://www.python.org/)
 
-Install [sceptre-ssm-resolver](https://pypi.org/project/sceptre-ssm-resolver/)
-
 See [https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/) for information on installing Python packages for a specific project.
 
 [architecture]: infra-arch.svg "iAtlas architecture"
