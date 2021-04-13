@@ -10,15 +10,16 @@ Metadata:
           - 'ManagerInstanceType'
           - 'KeyName'
           - 'GitLabRunnerInstanceType'
-          - 'NumInstances'
+          - 'MinNumInstances'
+          - 'MaxNumInstances'
       - Label:
           default: 'GitLab'
         Parameters: ['GitLabUrl', 'GitLabRegToken']
       - Label:
           default: 'Runner'
         Parameters:
-          - 'DbHostProd'
-          - 'DbHostStaging'
+          - 'DbHost'
+          - 'DbPort'
           - 'GitLabDockerImage'
           - 'GitLabMaxBuilds'
           - 'GitLabMaxConcurrentBuilds'
@@ -47,8 +48,12 @@ Parameters:
       - 't3a.small'
       - 't3a.xlarge'
     Default: 't3a.micro'
-  NumInstances:
-    Description: Number of Runner server instances (managers) in Auto scaling group
+  MinNumInstances:
+    Description: Minimum number of Runner server instances (managers) in Auto scaling group
+    Type: Number
+    Default: 1
+  MaxNumInstances:
+    Description: Maximum number of Runner server instances (managers) in Auto scaling group
     Type: Number
     Default: 1
   GitLabUrl:
@@ -120,6 +125,9 @@ Parameters:
     Description: Number of seconds of inactivity before an idle host is shut down during non-working hours.
     MinValue: 1
     Default: 180
+  GitLabRunnerTag:
+    Type: String
+    Description: The tag (or tags) that permit the runner to run a job.
   KeyName:
     Type: AWS::EC2::KeyPair::KeyName
     Description: Name of an existing EC2 KeyPair to enable SSH access to GitLab Runner's Manager instance via SSH. See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html
@@ -130,45 +138,23 @@ Parameters:
   PrivateSubnetIds:
     Type: List<AWS::EC2::Subnet::Id>
     Description: Private subnet IDs from the VPC for the manager instance. Minimum of two.
-  DbHostProd:
+  DbHost:
     Type: String
-    Description: The endpoint for the DB cluster for production. For example - mystack-mydbcluster-123456789012.us-east-2.rds.amazonaws.com
+    Description: The endpoint for the DB cluster. For example - mystack-mydbcluster-123456789012.us-east-2.rds.amazonaws.com
     Default: ''
-    NoEcho: true
-  DbHostStaging:
-    Type: String
-    Description: The endpoint for the DB cluster for staging. For example - mystack-mydbcluster-123456789012.us-east-2.rds.amazonaws.com
-    Default: ''
-    NoEcho: true
-  DbPortProd:
+  DbPort:
     Type: Number
-    Description: The port of the DB cluster for production.
+    Description: The port of the DB cluster.
     Default: 5432
-    NoEcho: true
-  DbPortStaging:
-    Type: Number
-    Description: The port of the DB cluster for staging.
-    Default: 5432
-    NoEcho: true
-  DbCredsArnProd:
-    Description: The name of the Database secret in the Secret Manager for Prod.
+  DbCredsArn:
+    Description: The name of the Database secret in the Secret Manager.
     NoEcho: 'true'
     Type: String
-  DbCredsArnStaging:
-    Description: The name of the Database secret in the Secret Manager for Staging.
-    NoEcho: 'true'
+  DBAccessSecurityGroupName:
     Type: String
-  DBAccessSecurityGroupNameProd:
-    Type: String
-    Description: The DB Security Group's name for production.
-  DBAccessSecurityGroupNameStaging:
-    Type: String
-    Description: The DB Security Group's name for staging.
-  KmsKeyArnProd:
-    Description: 'Encryption key ARN to use for storage in Prod'
-    Type: String
-  KmsKeyArnStaging:
-    Description: 'Encryption key ARN to use for storage in Staging'
+    Description: The DB Security Group's name.
+  KmsKeyArn:
+    Description: 'Encryption key ARN to use for storage'
     Type: String
 
 Conditions:
@@ -279,10 +265,8 @@ Resources:
               - secretsmanager:GetSecretValue
               - kms:Decrypt
             Resource:
-              - !Ref 'KmsKeyArnProd'
-              - !Ref 'KmsKeyArnStaging'
-              - !Ref 'DbCredsArnProd'
-              - !Ref 'DbCredsArnStaging'
+              - !Ref 'KmsKeyArn'
+              - !Ref 'DbCredsArn'
           - Effect: Allow
             Action:
               - logs:CreateLogStream
@@ -328,17 +312,17 @@ Resources:
     Properties:
       LaunchConfigurationName: !Ref Manager
       VPCZoneIdentifier: !Ref PrivateSubnetIds
-      MinSize: !Ref NumInstances
-      MaxSize: !Ref NumInstances
+      MinSize: !Ref MinNumInstances
+      MaxSize: !Ref MaxNumInstances
       Cooldown: '300'
-      DesiredCapacity: !Ref NumInstances
+      DesiredCapacity: !Ref MinNumInstances
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}
           PropagateAtLaunch: true
     CreationPolicy:
       ResourceSignal:
-        Count: !Ref NumInstances
+        Count: !Ref MinNumInstances
         Timeout: PT15M
 
   #############
@@ -445,10 +429,8 @@ Resources:
                     environment = [
                       "DOCKER_DRIVER=overlay2",
                       "DOCKER_TLS_CERTDIR=/certs",
-                      "DB_HOST_PROD=${DbHostProd}",
-                      "DB_HOST_STAGING=${DbHostStaging}",
-                      "DB_PORT_PROD=${DbPortProd}",
-                      "DB_PORT_STAGING=${DbPortStaging}"
+                      "DB_HOST=${DbHost}",
+                      "DB_PORT=${DbPort}"
                     ]
                     [runners.docker]
                       tls_verify = false
@@ -476,8 +458,7 @@ Resources:
                         "amazonec2-vpc-id=${VpcId}",
                         "amazonec2-subnet-id=${PrivateSubnet}",
                         "amazonec2-security-group=${AWS::StackName}-RunnersDockerSecurityGroup",
-                        "amazonec2-security-group=${DBAccessSecurityGroupNameProd}",
-                        "amazonec2-security-group=${DBAccessSecurityGroupNameStaging}",
+                        "amazonec2-security-group=${DBAccessSecurityGroupName}",
                         "amazonec2-tags=${AWS::StackName}-runner,gitlab-aws-autoscaler,gitlab,true,gitlab-runner-autoscale,true",
                         "amazonec2-use-private-address",
                         "amazonec2-iam-instance-profile=${RunnersInstanceProfile}"${LocalSpotVar}
@@ -516,7 +497,7 @@ Resources:
               command: curl -L https://gitlab-docker-machine-downloads.s3.amazonaws.com/master/docker-machine-Linux-x86_64 > /tmp/docker-machine && install /tmp/docker-machine /usr/local/bin/docker-machine && ln -s /usr/local/bin/docker-machine /usr/bin/docker-machine && rm /tmp/docker-machine
             20-register-runner:
               command: !Sub >-
-                gitlab-runner register --non-interactive --template-config /tmp/manager-config.template.toml --url ${GitLabUrl} --registration-token ${GitLabRegToken} --docker-image alpine:latest --executor shell --name ${AWS::StackName} --run-untagged=true --locked=false
+                gitlab-runner register --non-interactive --template-config /tmp/manager-config.template.toml --url ${GitLabUrl} --registration-token ${GitLabRegToken} --docker-image alpine:latest --executor shell --name ${AWS::StackName} --tag-list "${GitLabRunnerTag}" --run-untagged=false --locked=false
             30-update-config:
               command: !Sub >-
                 sed -i 's/concurrent = 1/concurrent = ${GitLabMaxConcurrentBuilds}/' /etc/gitlab-runner/config.toml &&sed -i 's/executor = "shell"/executor = "docker+machine"/' /etc/gitlab-runner/config.toml

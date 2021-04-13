@@ -105,12 +105,10 @@ Resources:
             Action:
               - kms:Decrypt
               - secretsmanager:GetSecretValue
-              - ssm:GetParameters
             Resource:
               - !Ref 'KmsKeyArn'
               - !Ref 'DbCredsArn'
               - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_gitlab_registry_creds-??????'
-              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
           - Effect: Allow
             Action:
               - logs:CreateLogStream
@@ -146,8 +144,11 @@ Resources:
               - 'ecs:RegisterContainerInstance'
               - 'ecs:StartTelemetrySession'
               - 'ecs:Submit*'
-              - 'logs:CreateLogStream'
-              - 'logs:PutLogEvents'
+            Resource: '*'
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
             Resource: '*'
   AutoScalingServicePolicy:
     Type: AWS::IAM::ManagedPolicy
