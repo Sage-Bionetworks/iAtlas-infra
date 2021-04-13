@@ -128,7 +128,7 @@ Resources:
               - 'elasticloadbalancing:RegisterTargets'
               - 'ec2:Describe*'
               - 'ec2:AuthorizeSecurityGroupIngress'
-            Resource: !Ref EcsAlb
+            Resource: '*'
   Ec2Policy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -144,9 +144,12 @@ Resources:
               - 'ecs:RegisterContainerInstance'
               - 'ecs:StartTelemetrySession'
               - 'ecs:Submit*'
-              - 'logs:CreateLogStream'
-              - 'logs:PutLogEvents'
-            Resource: !Ref EcsService
+            Resource: '*'
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: '*'
   AutoScalingServicePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -385,7 +388,7 @@ Resources:
       LoadBalancerArn: !Ref 'EcsAlb'
       Port: 443
       Protocol: 'HTTPS'
-      SslPolicy: 'ELBSecurityPolicy-TLS-1-2-Ext-2018-06'
+      SslPolicy: 'ELBSecurityPolicy-2016-08'
       Certificates:
         - CertificateArn: !Ref CertificateArn
   # Associate the domain name with the loadBalancer.
