@@ -145,6 +145,7 @@ Resources:
     DeletionPolicy: Delete
     UpdateReplacePolicy: Delete
     Properties:
+      EnableCloudwatchLogsExports: ["postgresql"]
       Engine: aurora-postgresql
       EngineVersion: !Ref DBEngineVersion
       Port: !Ref DBPort
