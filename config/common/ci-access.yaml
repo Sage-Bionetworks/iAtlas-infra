@@ -6,4 +6,4 @@ parameters:
     - arn:aws:iam::aws:policy/AdministratorAccess
 hooks:
   before_launch:
-   - !cmd "wget https://raw.githubusercontent.com/Sage-Bionetworks/aws-infra/master/templates/IAM/service-account.yaml -N -P templates/remote"
+   - !cmd "wget https://raw.githubusercontent.com/Sage-Bionetworks/aws-infra/v0.2.4/templates/IAM/service-account.yaml -N -P templates/remote"
