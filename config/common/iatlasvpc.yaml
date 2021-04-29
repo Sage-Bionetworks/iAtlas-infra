@@ -1,5 +1,7 @@
 template_path: remote/vpc-mini.yaml
 stack_name: iatlasvpc
+dependencies:
+  - common/ci-access.yaml
 stack_tags:
   Department: "CompOnc"
   Project: "iAtlas"
