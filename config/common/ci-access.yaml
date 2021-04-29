@@ -1,9 +1,0 @@
-# Setup a service account for CI to deploy CFN templates
-template_path: remote/service-account.yaml
-stack_name: ci-access
-parameters:
-  ManagedPolicyArns:
-    - arn:aws:iam::aws:policy/AdministratorAccess
-hooks:
-  before_launch:
-   - !cmd "wget https://raw.githubusercontent.com/Sage-Bionetworks/aws-infra/v0.2.4/templates/IAM/service-account.yaml -N -P templates/remote"
