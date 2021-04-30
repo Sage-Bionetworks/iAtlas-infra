@@ -1,6 +1,15 @@
 # This creates a common set of resources of iAtlas.
 AWSTemplateFormatVersion: 2010-09-09
 Description: KMS Keys for iAtlas
+Parameters:
+  KeyAdminArns:
+    Type: CommaDelimitedList
+    Description: A list of principals ARNs that can administrate the KMS key
+    ConstraintDescription: List of ARNs (i.e. ["arn:aws:iam::123456789:root", "arn:aws:iam::987654321:jsmith"]
+  KeyUserArns:
+    Type: CommaDelimitedList
+    Description: A list of principals ARNs that can access the KMS key
+    ConstraintDescription: List of ARNs (i.e. ["arn:aws:iam::123456789:root", "arn:aws:iam::987654321:jsmith"]
 Resources:
   KmsKey:
     Type: "AWS::KMS::Key"
@@ -16,14 +25,7 @@ Resources:
             Sid: "Allow administration of the key"
             Effect: "Allow"
             Principal:
-              AWS:
-                - !Join
-                  - ''
-                  - - 'arn:aws:iam::'
-                    - !Ref AWS::AccountId
-                    - ':root'
-                - !ImportValue us-east-1-iatlas-prod-ci-access-ServiceRoleArn
-                - !ImportValue us-east-1-jc-access-iatlas-prod-admin-SamlProviderRoleArn
+              AWS: !Ref KeyAdminArns
             Action:
               - "kms:Create*"
               - "kms:Describe*"
@@ -42,14 +44,7 @@ Resources:
             Sid: "Allow use of the key"
             Effect: "Allow"
             Principal:
-              AWS:
-                - !Join
-                  - ''
-                  - - 'arn:aws:iam::'
-                    - !Ref AWS::AccountId
-                    - ':root'
-                - !ImportValue us-east-1-iatlas-prod-ci-access-ServiceRoleArn
-                - !ImportValue us-east-1-jc-access-iatlas-prod-admin-SamlProviderRoleArn
+              AWS: !Ref KeyUserArns
             Action:
               - "kms:Encrypt"
               - "kms:Decrypt"

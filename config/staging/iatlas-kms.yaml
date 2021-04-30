@@ -4,3 +4,11 @@ stack_tags:
   Department: "CompOnc"
   Project: "iAtlas"
   OwnerEmail: "andrew.lamb@sagebase.org"
+parameters:
+  KeyAdminArns:
+    - 'arn:aws:iam::386990716034:root'
+    - !stack_output_external jc-access-iatlas-prod-admin::SamlProviderRoleArn
+    - !stack_output_external iatlas-prod-ci-access::ServiceRoleArn
+  KeyUserArns:
+    - !stack_output_external jc-access-iatlas-prod-admin::SamlProviderRoleArn
+    - !stack_output_external iatlas-prod-ci-access::ServiceRoleArn
