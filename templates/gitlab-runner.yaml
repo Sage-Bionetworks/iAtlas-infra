@@ -95,8 +95,6 @@ Resources:
               - 'sts:AssumeRole'
       Path: /
       ManagedPolicyArns:
-        - !ImportValue
-          'Fn::Sub': '${AWS::Region}-essentials-TagRootVolumePolicy'
         - !Ref SsmManagedPolicy
         - !Ref KmsDecryptManagedPolicy
         - 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
