@@ -1,0 +1,10 @@
+template_path: "remote/transit-gateway-attachment.yaml"
+stack_name: "sage-tgw-iatlasvpc"
+dependencies:
+  - common/iatlasvpc.yaml
+parameters:
+  VpcName: "iatlasvpc"
+  TransitGatewayId: 'tgw-08aa3c487e457374a'   # sage-tgw transit gateway
+hooks:
+  before_launch:
+    - !cmd "curl https://s3.amazonaws.com/{{stack_group_config.admincentral_cf_bucket}}/aws-infra/master/transit-gateway-attachment.yaml --create-dirs -o templates/remote/transit-gateway-attachment.yaml"
