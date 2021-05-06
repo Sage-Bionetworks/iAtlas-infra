@@ -341,6 +341,7 @@ Resources:
               - 'sts:AssumeRole'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
         - !Ref CachePolicy
         - !Ref RunnerPolicy
         - !Ref AccessSecretPolicy
@@ -459,7 +460,7 @@ Resources:
                         "amazonec2-subnet-id=${PrivateSubnet}",
                         "amazonec2-security-group=${AWS::StackName}-RunnersDockerSecurityGroup",
                         "amazonec2-security-group=${DBAccessSecurityGroupName}",
-                        "amazonec2-tags=${AWS::StackName}-runner,gitlab-aws-autoscaler,gitlab,true,gitlab-runner-autoscale,true",
+                        "amazonec2-tags=${AWS::StackName}-runner,gitlab-aws-autoscaler,gitlab,true,gitlab-runner-autoscale,true,PatchGroup,prod-default",
                         "amazonec2-use-private-address",
                         "amazonec2-iam-instance-profile=${RunnersInstanceProfile}"${LocalSpotVar}
                       ]
