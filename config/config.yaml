@@ -8,7 +8,7 @@ domain_name_staging: {{ environment_variable.DOMAIN_NAME_STAGING | default('cri-
 sub_domain_name_staging: {{ environment_variable.SUB_DOMAIN_NAME_STAGING | default('api-staging') }}
 # DO NOT store the token in git.
 gitlab_reg_token: {{ environment_variable.GITLAB_REG_TOKEN | default('_NEVER_GONNA_GET_IT_') }}
-template_bucket_name: 'bootstrap-awss3cloudformationbucket-114n2ojlbvj21'
+# template_bucket_name: 'bootstrap-awss3cloudformationbucket-114n2ojlbvj21'
 template_key_prefix: {{ environment_variable.TRAVIS_BRANCH | default('testing') }}
 admincentral_cf_bucket: 'bootstrap-awss3cloudformationbucket-19qromfd235z9'
 stack_tags:

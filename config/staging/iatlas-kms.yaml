@@ -1,3 +1,11 @@
 template_path: kms.yaml
 stack_name: iatlas-kms-staging
 stack_tags: {{stack_group_config.stack_tags}}
+parameters:
+  KeyAdminArns:
+    - 'arn:aws:iam::386990716034:root'
+    - !stack_output_external jc-access-iatlas-prod-admin::SamlProviderRoleArn
+    - !stack_output_external iatlas-prod-ci-access::ServiceRoleArn
+  KeyUserArns:
+    - !stack_output_external jc-access-iatlas-prod-admin::SamlProviderRoleArn
+    - !stack_output_external iatlas-prod-ci-access::ServiceRoleArn
