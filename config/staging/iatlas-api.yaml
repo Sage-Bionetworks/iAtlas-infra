@@ -11,6 +11,8 @@ parameters:
   InstanceType: 't3a.large'
   KeyName: 'iatlas-api-staging' # For this to work, this key must be added in the SAGE AWS.
   VpcId: !stack_output_external iatlasvpc::VPCId
+  ClusterName: 'iatlas-staging-EcsCluster'
+  ServiceName: 'iatlas-staging-EcsService'
   BastionHostSgId: !stack_output_external iatlasvpc::BastianSecurityGroup
   PublicSubnetIds:
     - !stack_output_external iatlasvpc::PublicSubnet

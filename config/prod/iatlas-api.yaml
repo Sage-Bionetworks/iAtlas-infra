@@ -11,6 +11,8 @@ parameters:
   InstanceType: 't3a.medium'
   KeyName: 'iatlas-api-prod' # For this to work, this key must be added in the SAGE AWS.
   VpcId: !stack_output_external iatlasvpc::VPCId
+  ClusterName: 'iatlas-prod-EcsCluster'
+  ServiceName: 'iatlas-prod-EcsService'
   BastionHostSgId: !stack_output_external iatlasvpc::BastianSecurityGroup
   PublicSubnetIds:
     - !stack_output_external iatlasvpc::PublicSubnet

@@ -16,6 +16,12 @@ Parameters:
   CertificateArn:
     Type: String
     Description: ARN of the Certificate.
+  ClusterName:
+    Type: String
+    Description: The name of the cluster. This must be named so that the CI scripts may use it.
+  ServiceName:
+    Type: String
+    Description: The name of the service. This must be named so that the CI scripts may use it.
   VpcId:
     Type: AWS::EC2::VPC::Id
     Description: A VPC to run ECS instances in.
@@ -340,6 +346,9 @@ Resources:
 
   EcsCluster:
     Type: AWS::ECS::Cluster
+    Properties:
+      # This must be named so that the CI scripts may use it.
+      ClusterName: !Ref ClusterName
 
   ListenerCertificate:
     Type: AWS::ElasticLoadBalancingV2::ListenerCertificate
@@ -426,6 +435,7 @@ Resources:
       - AlbHttpListener
       - AlbHttpsListener
     Properties:
+      ServiceName: !Ref ServiceName
       Cluster: !Ref 'EcsCluster'
       DesiredCount: 1
       LoadBalancers:
