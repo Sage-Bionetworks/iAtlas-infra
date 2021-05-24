@@ -344,7 +344,6 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
         - !Ref CachePolicy
         - !Ref RunnerPolicy
-        - !Ref AccessSecretPolicy
   RunnersRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -356,6 +355,8 @@ Resources:
                 - 'ec2.amazonaws.com'
             Action:
               - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - !Ref AccessSecretPolicy
 
   #########################
   ### Instance Profiles ###
@@ -428,10 +429,10 @@ Resources:
                   [[runners]]
                     limit = ${GitLabMaxConcurrentBuilds}
                     environment = [
-                      "DOCKER_DRIVER=overlay2",
-                      "DOCKER_TLS_CERTDIR=/certs",
                       "DB_HOST=${DbHost}",
-                      "DB_PORT=${DbPort}"
+                      "DB_PORT=${DbPort}",
+                      "DOCKER_DRIVER=overlay2",
+                      "DOCKER_TLS_CERTDIR=/certs"
                     ]
                     [runners.docker]
                       tls_verify = false
