@@ -9,6 +9,8 @@ parameters:
     - 'arn:aws:iam::386990716034:root'
     - !stack_output_external jc-access-iatlas-prod-admin::SamlProviderRoleArn
     - !stack_output_external iatlas-prod-ci-access::ServiceRoleArn
+    - !stack_output_external iatlas-collaborator-access::ServiceRoleArn
   KeyUserArns:
     - !stack_output_external jc-access-iatlas-prod-admin::SamlProviderRoleArn
     - !stack_output_external iatlas-prod-ci-access::ServiceRoleArn
+    - !stack_output_external iatlas-collaborator-access::ServiceRoleArn
