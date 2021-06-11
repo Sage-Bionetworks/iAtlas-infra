@@ -10,9 +10,12 @@ stack_tags: {{stack_group_config.stack_tags}}
 parameters:
   InstanceType: 't3a.large'
   KeyName: 'iatlas-api-staging' # For this to work, this key must be added in the SAGE AWS.
+  GitLabContainerSecretName: 'gitlab_registry_creds_staging'
+  GitLabContainerPass: {{stack_group_config.gitlab_container_pass}}
+  GitLabContainerUser: {{stack_group_config.gitlab_container_user}}
   VpcId: !stack_output_external iatlasvpc::VPCId
-  ClusterName: 'iatlas-staging-EcsCluster'
-  ServiceName: 'iatlas-staging-EcsService'
+  ClusterName: {{stack_group_config.ecs_cluster_name_staging}}
+  ServiceName: {{stack_group_config.ecs_service_name_staging}}
   BastionHostSgId: !stack_output_external iatlasvpc::BastianSecurityGroup
   PublicSubnetIds:
     - !stack_output_external iatlasvpc::PublicSubnet

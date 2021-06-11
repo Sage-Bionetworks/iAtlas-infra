@@ -6,8 +6,14 @@ domain_name: {{ environment_variable.DOMAIN_NAME | default('cri-iatlas.org') }}
 sub_domain_name: {{ environment_variable.SUB_DOMAIN_NAME | default('api') }}
 domain_name_staging: {{ environment_variable.DOMAIN_NAME_STAGING | default('cri-iatlas.org') }}
 sub_domain_name_staging: {{ environment_variable.SUB_DOMAIN_NAME_STAGING | default('api-staging') }}
+gitlab_container_pass: {{ environment_variable.GITLAB_CONTAINER_PASS | default('_NOT_REAL_') }}
+gitlab_container_user: {{ environment_variable.GITLAB_CONTAINER_USER | default('_WILL_NOT_WORK_') }}
 # DO NOT store the token in git.
 gitlab_reg_token: {{ environment_variable.GITLAB_REG_TOKEN | default('_NEVER_GONNA_GET_IT_') }}
+ecs_cluster_name_prod: 'iatlas-prod-EcsCluster'
+ecs_service_name_prod: 'iatlas-prod-EcsService'
+ecs_cluster_name_staging: 'iatlas-staging-EcsCluster'
+ecs_service_name_staging: 'iatlas-staging-EcsService'
 # template_bucket_name: 'bootstrap-awss3cloudformationbucket-114n2ojlbvj21'
 template_key_prefix: {{ environment_variable.TRAVIS_BRANCH | default('testing') }}
 admincentral_cf_bucket: 'bootstrap-awss3cloudformationbucket-19qromfd235z9'

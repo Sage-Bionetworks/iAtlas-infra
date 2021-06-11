@@ -56,6 +56,12 @@ Parameters:
     Description: Maximum number of Runner server instances (managers) in Auto scaling group
     Type: Number
     Default: 1
+  EcsClusterName:
+    Description: The name of the ECS Cluster that the runner is allowed to update the service of.
+    Type: String
+  EcsServiceName:
+    Description: The name of the ECS Service that the runner is allowed to update.
+    Type: String
   GitLabUrl:
     Type: 'String'
     Description: GitLab instance URL. If there is a dedicated GitLab instance, pass the host url, otherwise use the default https://gitlab.com
@@ -271,6 +277,21 @@ Resources:
             Action:
               - logs:CreateLogStream
             Resource: '*'
+  EcsPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Action:
+              - 'ecs:UpdateService'
+            Resource: !Sub arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:service/${EcsClusterName}/${EcsServiceName}
+            Condition:
+              StringEqualsIfExists:
+                'ec2:Region': !Ref 'AWS::Region'
+              ArnEqualsIfExists:
+                'ec2:Vpc': !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${VpcId}'
 
   ####################################
   ### S3 Bucket for Runners' cache ###
@@ -357,6 +378,7 @@ Resources:
               - 'sts:AssumeRole'
       ManagedPolicyArns:
         - !Ref AccessSecretPolicy
+        - !Ref EcsPolicy
 
   #########################
   ### Instance Profiles ###
