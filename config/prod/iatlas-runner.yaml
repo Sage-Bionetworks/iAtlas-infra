@@ -12,6 +12,8 @@ parameters:
     - !stack_output_external iatlasvpc::PrivateSubnet1
     - !stack_output_external iatlasvpc::PrivateSubnet2
   KeyName: 'iatlas-gitlab-runner-prod'
+  EcsClusterName: {{stack_group_config.ecs_cluster_name_prod}}
+  EcsServiceName: {{stack_group_config.ecs_service_name_prod}}
   DbHost: !stack_output_external iatlasdb-prod::ClusterEndpoint
   DbPort: !stack_output_external iatlasdb-prod::ClusterPort
   DbCredsArn: !stack_output_external iatlasdb-prod::DbCredsArn

@@ -3,6 +3,15 @@ Parameters:
   KeyName:
     Type: AWS::EC2::KeyPair::KeyName
     Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS instances.
+  GitLabContainerSecretName:
+    Description: Name of the secret that holds the credentials for accessing the GitLab container registry.
+    Type: String
+  GitLabContainerUser:
+    Description: The user used to access the GitLab container registry (generated on GitLab when generating the access token).
+    Type: String
+  GitLabContainerPass:
+    Description: The password (access token) used to access the GitLab container registry (generated on GitLab).
+    Type: String
   HostedZone:
     Type: String
     Description: The hosted zone in Route 53 for the Load balancer.
@@ -97,6 +106,21 @@ Parameters:
     Description: 'Encryption key ARN to use for storage'
     Type: String
 Resources:
+  ###############
+  ### Secrets ###
+  ###############
+  ContainerRegistrySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: Username and password for the container registry in GitLab
+      KmsKeyId: !Ref KmsKeyArn
+      Name: !Ref 'GitLabContainerSecretName'
+      GenerateSecretString:
+        SecretStringTemplate: !Sub '{"username": "${GitLabContainerUser}", "password": "${GitLabContainerPass}"}'
+      Tags:
+        - Key: Name
+          Value: gitlab-container-registry-secret
+
   ########################
   ### Managed Policies ###
   ########################
@@ -114,7 +138,7 @@ Resources:
             Resource:
               - !Ref 'KmsKeyArn'
               - !Ref 'DbCredsArn'
-              - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_gitlab_registry_creds-??????'
+              - !Ref 'ContainerRegistrySecret'
           - Effect: Allow
             Action:
               - logs:CreateLogStream
@@ -319,7 +343,7 @@ Resources:
           Essential: true
           Image: !Sub 'registry.gitlab.com/cri-iatlas/iatlas-api:${DockerImageTag}'
           RepositoryCredentials:
-            CredentialsParameter: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:iatlas_gitlab_registry_creds'
+            CredentialsParameter: !Ref 'ContainerRegistrySecret'
           Memory: 300
           LogConfiguration:
             LogDriver: awslogs
