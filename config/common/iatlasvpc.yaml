@@ -1,4 +1,6 @@
-template_path: remote/vpc-mini.yaml
+template:
+  type: http
+  url: https://{{stack_group_config.admincentral_cf_bucket}}.s3.amazonaws.com/aws-infra/v0.3.2/VPC/vpc-mini.yaml
 stack_name: iatlasvpc
 stack_tags:
   Department: "CompOnc"
@@ -7,6 +9,3 @@ stack_tags:
 parameters:
   VpcSubnetPrefix: "10.255.20"
   VpcName: iatlasvpc
-hooks:
-  before_launch:
-    - !cmd "curl https://{{stack_group_config.admincentral_cf_bucket}}.s3.amazonaws.com/aws-infra/master/VPC/vpc-mini.yaml --create-dirs -o templates/remote/vpc-mini.yaml"
