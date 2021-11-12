@@ -1,5 +1,4 @@
-template:
-  path: kms.yaml
+template_path: kms.yaml
 stack_name: iatlas-kms-staging
 stack_tags:
   Department: "CompOnc"

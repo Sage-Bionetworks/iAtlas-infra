@@ -1,5 +1,4 @@
-template:
-  path: gitlab-runner.yaml
+template_path: gitlab-runner.yaml
 stack_name: iatlas-gitlab-runner-staging
 dependencies:
   - common/iatlasvpc.yaml
