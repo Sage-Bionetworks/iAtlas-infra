@@ -1,5 +1,4 @@
-template:
-  path: aurora-postgresql-db.yaml
+template_path: aurora-postgresql-db.yaml
 stack_name: iatlasdb-staging
 dependencies:
   - common/iatlasvpc.yaml

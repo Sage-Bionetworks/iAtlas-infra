@@ -1,9 +1,10 @@
-template:
-  type: http
-  url: https://{{stack_group_config.admincentral_cf_bucket}}.s3.amazonaws.com/aws-infra/v0.2.20/R53-hostedzone.yaml
+template_path: remote/R53-hostedzone.yaml
 stack_name: iatlas-dns-zone
 parameters:
   Department: CompOnc
   Project: iAtlas
   OwnerEmail: andrew.lamb@sagebase.org
   DnsDomainName: cri-iatlas.org
+hooks:
+  before_launch:
+    - !cmd "wget {{stack_group_config.aws_infra_templates_root_url}}/v0.2.20/templates/R53-hostedzone.yaml -O templates/remote/R53-hostedzone.yaml"
