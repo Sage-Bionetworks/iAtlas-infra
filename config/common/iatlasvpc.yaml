@@ -8,4 +8,4 @@ parameters:
   PrivateSubnetZones: '{{stack_group_config.region}}a, {{stack_group_config.region}}b, {{stack_group_config.region}}c'
 hooks:
   before_launch:
-    - !cmd "wget https://raw.githubusercontent.com/Sage-Bionetworks/aws-infra/master/templates/VPC/vpc-mini.yaml -N -P templates/remote"
+    - !cmd "wget {{stack_group_config.aws_infra_templates_root_url}}/master/templates/VPC/vpc-mini.yaml -N -P templates/remote"

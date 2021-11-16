@@ -42,7 +42,7 @@ The following MUST be created initially for the CI/CD to work in GitLab:
 
   The VPC is needed for the Runner and the Database.
 
-- `staging/iatlas-runner.yaml`
+- `prod/iatlas-runner.yaml`
 
   The `prod` GitLab runner is used for prod environment builds in GitLab only. Creating it will also create:
   - `common/iatlasvpc.yaml`

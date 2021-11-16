@@ -10,6 +10,9 @@ Parameters:
     Description: Sub domain (default is '*') to secure with certificate (i.e. "api" of api.cri-iatlas.org)
     Type: String
     Default: '*'
+  HostedZoneId:
+    Description: The id of the Hosted Zone
+    Type: String
 Resources:
   Certificate:
     Type: AWS::CertificateManager::Certificate
@@ -17,7 +20,7 @@ Resources:
       DomainName: !Sub '${DnsSubDomainName}.${DnsDomainName}'
       DomainValidationOptions:
         - DomainName: !Sub '${DnsSubDomainName}.${DnsDomainName}'
-          ValidationDomain: !Ref DnsDomainName
+          HostedZoneId: !Ref 'HostedZoneId'
       ValidationMethod: 'DNS'
       Tags:
         - Key: 'Name'

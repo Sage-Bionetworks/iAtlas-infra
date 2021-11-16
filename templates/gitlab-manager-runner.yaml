@@ -30,6 +30,9 @@ Metadata:
           - 'GitLabOffPeakTimezone'
 
 Parameters:
+  CacheBucket:
+    Description: The S3 Bucket that the runner is allowed to use for caching.
+    Type: String
   # See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/retrieve-ecs-optimized_AMI.html
   # AMI will be and Amazon Linux 2 which should be very close to CentOs/RHEL.
   ManagerImageId:
@@ -56,12 +59,6 @@ Parameters:
     Description: Maximum number of Runner server instances (managers) in Auto scaling group
     Type: Number
     Default: 1
-  EcsClusterName:
-    Description: The name of the ECS Cluster that the runner is allowed to update the service of.
-    Type: String
-  EcsServiceName:
-    Description: The name of the ECS Service that the runner is allowed to update.
-    Type: String
   GitLabUrl:
     Type: 'String'
     Description: GitLab instance URL. If there is a dedicated GitLab instance, pass the host url, otherwise use the default https://gitlab.com
@@ -134,10 +131,6 @@ Parameters:
   GitLabRunnerTag:
     Type: String
     Description: The tag (or tags) that permit the runner to run a job.
-  KeyName:
-    Type: AWS::EC2::KeyPair::KeyName
-    Description: Name of an existing EC2 KeyPair to enable SSH access to GitLab Runner's Manager instance via SSH. See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html
-    ConstraintDescription: Can contain only ASCII characters.
   VpcId:
     Type: AWS::EC2::VPC::Id
     Description: A VPC to run ECS instances in.
@@ -152,165 +145,20 @@ Parameters:
     Type: Number
     Description: The port of the DB cluster.
     Default: 5432
-  DbCredsArn:
-    Description: The name of the Database secret in the Secret Manager.
-    NoEcho: 'true'
-    Type: String
   DBAccessSecurityGroupName:
     Type: String
     Description: The DB Security Group's name.
-  KmsKeyArn:
-    Description: 'Encryption key ARN to use for storage'
+  ManagerRole:
+    Description: 'The role for the manager'
+    Type: String
+  RunnersRole:
+    Description: 'The role for the runners'
     Type: String
 
 Conditions:
   UseSpotInstances: !Equals ['Yes', 'Never']
 
 Resources:
-  ########################
-  ### Managed Policies ###
-  ########################
-  CachePolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Action:
-              - 's3:ListObjects*'
-              - 's3:GetObject*'
-              - 's3:DeleteObject*'
-              - 's3:PutObject*'
-            Resource:
-              - !Sub '${CacheBucket.Arn}/*'
-          - Effect: 'Allow'
-            Action:
-              - 's3:ListBucket'
-              - 's3:AbortMultipartUpload'
-              - 's3:ListMultipartUploadParts'
-              - 's3:ListBucketMultipartUploads'
-            Resource:
-              - !GetAtt 'CacheBucket.Arn'
-  RunnerPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Action:
-              - 'ec2:*'
-            Resource: '*'
-            Condition:
-              StringEqualsIfExists:
-                'ec2:Region': !Ref 'AWS::Region'
-              ArnEqualsIfExists:
-                'ec2:Vpc': !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${VpcId}'
-          - Effect: 'Allow'
-            Action:
-              - 'ec2:CreateTags'
-              - 'ssm:UpdateInstanceInformation'
-            Resource: '*'
-            Condition:
-              StringEqualsIfExists:
-                'ec2:InstanceType': !Ref 'GitLabRunnerInstanceType'
-                'ec2:Region': !Ref 'AWS::Region'
-                'ec2:Tenancy': 'default'
-              ArnEqualsIfExists:
-                'ec2:Vpc': !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${VpcId}'
-                'ec2:InstanceProfile': !GetAtt 'RunnersInstanceProfile.Arn'
-              StringLike:
-                'aws:RequestTag/Name': '*gitlab-docker-machine-*'
-              ForAllValues:StringEquals:
-                'aws:TagKeys': ['Name']
-          - Effect: 'Allow'
-            Action:
-              - 'ec2:AttachVolume'
-              - 'ec2:CreateVolume'
-              - 'ec2:DetachVolume'
-              - 'ec2:RequestSpotInstances'
-              - 'ec2:RunInstances'
-            Resource:
-              - !Sub 'arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:*'
-              - !Sub 'arn:aws:ec2:${AWS::Region}::snapshot/*'
-            Condition:
-              StringEqualsIfExists:
-                'ec2:InstanceType': !Ref 'GitLabRunnerInstanceType'
-                'ec2:Region': !Ref 'AWS::Region'
-                'ec2:Tenancy': 'default'
-              ArnEqualsIfExists:
-                'ec2:Vpc': !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${VpcId}'
-                'ec2:InstanceProfile': !GetAtt 'RunnersInstanceProfile.Arn'
-          - Effect: 'Allow'
-            Action:
-              - 'ec2:RebootInstances'
-              - 'ec2:StartInstances'
-              - 'ec2:StopInstances'
-              - 'ec2:TerminateInstances'
-            Resource:
-              - !Sub 'arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*'
-            Condition:
-              StringLike:
-                'ec2:ResourceTag/Name': '*gitlab-docker-machine-*'
-              ArnEquals:
-                'ec2:InstanceProfile': !GetAtt 'RunnersInstanceProfile.Arn'
-          - Effect: 'Allow'
-            Action:
-              - 'iam:PassRole'
-            Resource:
-              - !GetAtt 'RunnersRole.Arn'
-  AccessSecretPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - secretsmanager:GetSecretValue
-              - kms:Decrypt
-            Resource:
-              - !Ref 'KmsKeyArn'
-              - !Ref 'DbCredsArn'
-          - Effect: Allow
-            Action:
-              - logs:CreateLogStream
-            Resource: '*'
-  EcsPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Action:
-              - 'ecs:UpdateService'
-            Resource: !Sub arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:service/${EcsClusterName}/${EcsServiceName}
-            Condition:
-              StringEqualsIfExists:
-                'ec2:Region': !Ref 'AWS::Region'
-              ArnEqualsIfExists:
-                'ec2:Vpc': !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${VpcId}'
-
-  ####################################
-  ### S3 Bucket for Runners' cache ###
-  ####################################
-  CacheBucket:
-    Type: 'AWS::S3::Bucket'
-    Properties:
-      LifecycleConfiguration:
-        Rules:
-          - Status: 'Enabled'
-            ExpirationInDays: 30
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-${AWS::AccountId}-CiRunner'
-
   ##############
   ### Groups ###
   ##############
@@ -338,47 +186,19 @@ Resources:
       Cooldown: '300'
       DesiredCapacity: !Ref MinNumInstances
       Tags:
-        - Key: Name
+        - Key: 'Name'
           Value: !Sub ${AWS::StackName}
+          PropagateAtLaunch: true
+        - Key: 'PatchGroup'
+          Value: 'prod-default'
+          PropagateAtLaunch: true
+        - Key: 'ManagedInstanceMaintenanceTarget'
+          Value: 'yes'
           PropagateAtLaunch: true
     CreationPolicy:
       ResourceSignal:
         Count: !Ref MinNumInstances
         Timeout: PT15M
-
-  #############
-  ### Roles ###
-  #############
-  ManagerRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: 'Allow'
-            Principal:
-              Service:
-                - 'ec2.amazonaws.com'
-            Action:
-              - 'sts:AssumeRole'
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
-        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-        - !Ref CachePolicy
-        - !Ref RunnerPolicy
-  RunnersRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: 'Allow'
-            Principal:
-              Service:
-                - 'ec2.amazonaws.com'
-            Action:
-              - 'sts:AssumeRole'
-      ManagedPolicyArns:
-        - !Ref AccessSecretPolicy
-        - !Ref EcsPolicy
 
   #########################
   ### Instance Profiles ###
@@ -402,7 +222,6 @@ Resources:
     Properties:
       ImageId: !Ref 'ManagerImageId'
       InstanceType: !Ref 'ManagerInstanceType'
-      KeyName: !Ref 'KeyName'
       IamInstanceProfile: !Ref 'ManagerInstanceProfile'
       SecurityGroups:
         - !Ref 'ManagerSecurityGroup'
@@ -424,8 +243,6 @@ Resources:
           # Signal the status from cfn-init
           /opt/aws/bin/cfn-signal -e $? --stack '${AWS::StackName}' --region '${AWS::Region}' --resource RunnerAutoScalingGroup
 
-          # Enable auto-updating.
-          yum update -y && yum install -y yum-cron && chkconfig yum-cron on
     Metadata:
       Comment: Install GitLab Runner
       'AWS::CloudFormation::Init':
@@ -561,6 +378,3 @@ Outputs:
     Value: !Ref "AWS::Region"
   AwsAccountId:
     Value: !Ref "AWS::AccountId"
-  CacheBucketName:
-    Description: Name of created S3 bucket.
-    Value: !Ref 'CacheBucket'
