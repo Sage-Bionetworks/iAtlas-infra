@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  ####################################
+  ### S3 Bucket for Runners' cache ###
+  ####################################
+  CacheBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      LifecycleConfiguration:
+        Rules:
+          - Status: 'Enabled'
+            ExpirationInDays: 30
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-${AWS::AccountId}-CiRunner'
+
+Outputs:
+  StackName:
+    Value: !Ref 'AWS::StackName'
+  AwsRegion:
+    Value: !Ref "AWS::Region"
+  AwsAccountId:
+    Value: !Ref "AWS::AccountId"
+  CacheBucketArn:
+    Description: ARN of created S3 bucket.
+    Value: !GetAtt CacheBucket.Arn
+    Export:
+      Name: !Sub '${AWS::Region}-${AWS::StackName}-CacheBucketArn'
+  CacheBucket:
+    Description: Name of created S3 bucket.
+    Value: !Ref 'CacheBucket'

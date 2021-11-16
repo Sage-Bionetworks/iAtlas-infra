@@ -1,8 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Parameters:
-  KeyName:
-    Type: AWS::EC2::KeyPair::KeyName
-    Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS instances.
   GitLabContainerSecretName:
     Description: Name of the secret that holds the credentials for accessing the GitLab container registry.
     Type: String
@@ -43,6 +40,9 @@ Parameters:
   PrivateSubnetIds:
     Type: List<AWS::EC2::Subnet::Id>
     Description: Private subnet IDs from the VPC for ECS node placement. Minimum of two.
+  ExecutionRoleArn:
+    Description: The ARN of the Execution Role
+    Type: String
   DesiredCapacity:
     Type: Number
     Default: '1'
@@ -115,8 +115,7 @@ Resources:
       Description: Username and password for the container registry in GitLab
       KmsKeyId: !Ref KmsKeyArn
       Name: !Ref 'GitLabContainerSecretName'
-      GenerateSecretString:
-        SecretStringTemplate: !Sub '{"username": "${GitLabContainerUser}", "password": "${GitLabContainerPass}"}'
+      SecretString: !Sub '{"username": "${GitLabContainerUser}", "password": "${GitLabContainerPass}"}'
       Tags:
         - Key: Name
           Value: gitlab-container-registry-secret
@@ -124,25 +123,6 @@ Resources:
   ########################
   ### Managed Policies ###
   ########################
-  # This is necessary so it can read the Secrets Manager entry that contains the external registry credentials.
-  AccessSecretPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - kms:Decrypt
-              - secretsmanager:GetSecretValue
-            Resource:
-              - !Ref 'KmsKeyArn'
-              - !Ref 'DbCredsArn'
-              - !Ref 'ContainerRegistrySecret'
-          - Effect: Allow
-            Action:
-              - logs:CreateLogStream
-            Resource: '*'
   EcsServicePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -198,22 +178,6 @@ Resources:
   #############
   ### Roles ###
   #############
-  # iAtlas API task execution IAM role
-  IAtlasIAMExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      ManagedPolicyArns:
-        - !Ref 'AccessSecretPolicy'
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - ecs-tasks.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-      Path: /
   EcsServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -231,6 +195,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
         - !Ref Ec2Policy
       AssumeRolePolicyDocument:
         Statement:
@@ -325,7 +290,7 @@ Resources:
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
-      Name: EcsTargetGroup
+      Name: !Sub 'EcsTargetGroup-${FlaskEnv}'
       Port: 80
       Protocol: HTTP
       UnhealthyThresholdCount: 2
@@ -336,9 +301,9 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: !Ref 'AWS::StackName'
-      ExecutionRoleArn: !GetAtt ['IAtlasIAMExecutionRole', 'Arn']
+      ExecutionRoleArn: !Ref ExecutionRoleArn
       ContainerDefinitions:
-        - Name: iatlas-api
+        - Name: !Sub 'iatlas-api-${FlaskEnv}'
           Cpu: 100
           Essential: true
           Image: !Sub 'registry.gitlab.com/cri-iatlas/iatlas-api:${DockerImageTag}'
@@ -445,7 +410,6 @@ Resources:
         - !Ref 'DbAccessSecurityGroup'
       InstanceType: !Ref 'InstanceType'
       IamInstanceProfile: !Ref 'EC2InstanceProfile'
-      KeyName: !Ref 'KeyName'
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
@@ -463,7 +427,7 @@ Resources:
       Cluster: !Ref 'EcsCluster'
       DesiredCount: 1
       LoadBalancers:
-        - ContainerName: iatlas-api
+        - ContainerName: !Sub 'iatlas-api-${FlaskEnv}'
           ContainerPort: 80
           TargetGroupArn: !Ref 'EcsTargetGroup'
       Role: !Ref 'EcsServiceRole'

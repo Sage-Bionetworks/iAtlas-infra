@@ -1,5 +1,8 @@
 template_path: kms.yaml
 stack_name: iatlas-kms-staging
+dependencies:
+  - staging/iatlas-api-roles.yaml
+  - staging/iatlas-runner-roles.yaml
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
   KeyAdminArns:
@@ -11,3 +14,5 @@ parameters:
     - arn:aws:iam::386990716034:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_Administrator_13f4158c711c1d66
     - !stack_output_external iatlas-prod-ci-access::ServiceRoleArn
     - !stack_output_external iatlas-collaborator-access::ServiceRoleArn
+    - !stack_output_external iatlas-gitlab-roles-staging::RunnersRoleArn
+    - !stack_output_external iatlas-api-roles-staging::ExecutionRoleArn

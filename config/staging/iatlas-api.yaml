@@ -6,10 +6,10 @@ dependencies:
   - staging/iatlas-db.yaml
   - staging/iatlas-api-hostedzone.yaml
   - staging/iatlas-api-certificate.yaml
+  - staging/iatlas-api-roles.yaml
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
   InstanceType: 't3a.large'
-  KeyName: 'iatlas-api-staging' # For this to work, this key must be added in the SAGE AWS.
   GitLabContainerSecretName: 'gitlab_registry_creds_staging'
   GitLabContainerPass: {{stack_group_config.gitlab_container_pass}}
   GitLabContainerUser: {{stack_group_config.gitlab_container_user}}
@@ -37,3 +37,4 @@ parameters:
   DbAccessSecurityGroup: !stack_output_external iatlasdb-staging::DBAccessSecurityGroup
   DbCredsArn: !stack_output_external iatlasdb-staging::DbCredsArn
   KmsKeyArn: !stack_output_external iatlas-kms-staging::KmsKeyArn
+  ExecutionRoleArn: !stack_output_external iatlas-api-roles-staging::ExecutionRoleArn
