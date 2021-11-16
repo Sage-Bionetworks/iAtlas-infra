@@ -8,7 +8,6 @@ Metadata:
         Parameters:
           - 'ManagerImageId'
           - 'ManagerInstanceType'
-          - 'KeyName'
           - 'GitLabRunnerInstanceType'
           - 'MinNumInstances'
           - 'MaxNumInstances'
