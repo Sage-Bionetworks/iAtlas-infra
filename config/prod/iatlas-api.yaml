@@ -1,0 +1,40 @@
+template_path: ecs.yaml
+stack_name: iatlas-prod
+dependencies:
+  - common/iatlasvpc.yaml
+  - prod/iatlas-kms.yaml
+  - prod/iatlas-db.yaml
+  - prod/iatlas-api-hostedzone.yaml
+  - prod/iatlas-api-certificate.yaml
+  - prod/iatlas-api-roles.yaml
+stack_tags: {{stack_group_config.stack_tags}}
+parameters:
+  InstanceType: 't3a.large'
+  GitLabContainerSecretName: 'gitlab_registry_creds_prod'
+  GitLabContainerPass: {{stack_group_config.gitlab_container_pass}}
+  GitLabContainerUser: {{stack_group_config.gitlab_container_user}}
+  VpcId: !stack_output_external iatlasvpc::VPCId
+  ClusterName: {{stack_group_config.ecs_cluster_name_prod}}
+  ServiceName: {{stack_group_config.ecs_service_name_prod}}
+  BastionHostSgId: !stack_output_external iatlasvpc::BastianSecurityGroup
+  PublicSubnetIds:
+    - !stack_output_external iatlasvpc::PublicSubnet
+    - !stack_output_external iatlasvpc::PublicSubnet1
+    - !stack_output_external iatlasvpc::PublicSubnet2
+  PrivateSubnetIds:
+    - !stack_output_external iatlasvpc::PrivateSubnet
+    - !stack_output_external iatlasvpc::PrivateSubnet1
+    - !stack_output_external iatlasvpc::PrivateSubnet2
+  MaxSize: '2'
+  DockerImageTag: {{stack_group_config.docker_image_tag}}
+  FlaskEnv: 'production'
+  HostedZone: !stack_output_external iatlas-api-hostedzone-prod::HostedZoneId
+  CertificateArn: !stack_output_external iatlas-api-certificate-prod::CertificateArn
+  SubDomainName: {{stack_group_config.sub_domain_name}}
+  DomainName: {{stack_group_config.domain_name}}
+  DbHost: !stack_output_external iatlasdb-prod::ClusterEndpoint
+  DbPort: !stack_output_external iatlasdb-prod::ClusterPort
+  DbAccessSecurityGroup: !stack_output_external iatlasdb-prod::DBAccessSecurityGroup
+  DbCredsArn: !stack_output_external iatlasdb-prod::DbCredsArn
+  KmsKeyArn: !stack_output_external iatlas-kms-prod::KmsKeyArn
+  ExecutionRoleArn: !stack_output_external iatlas-api-roles-prod::ExecutionRoleArn

@@ -3,15 +3,11 @@ stack_name: iatlasdb-staging
 dependencies:
   - common/iatlasvpc.yaml
   - staging/iatlas-kms.yaml
-stack_tags:
-  Department: "CompOnc"
-  Project: "iAtlas"
-  OwnerEmail: "andrew.lamb@sagebase.org"
+stack_tags: {{stack_group_config.stack_tags}}
 parameters:
   VpcName: iatlasvpc
-  KmsKeyName: !stack_output_external iatlas-kms-staging::KmsKey
-  MasterUsername: !ssm /iatlas/staging/AuroraUsername
-  MasterUserPassword: !ssm /iatlas/staging/AuroraPassword
-  DBInstanceClass: "db.t3.large"
-  DBEngineVersion: "11.7"
-  DBPort: "5432"
+  KmsKey: !stack_output_external iatlas-kms-staging::KmsKey
+  DbSecretPrefix: 'staging_'
+  DbCredsName: 'iatlas_db_creds_encrypted_staging'
+  DBInstanceClass: 'db.t3.large'
+  DBEngineVersion: '12.4'

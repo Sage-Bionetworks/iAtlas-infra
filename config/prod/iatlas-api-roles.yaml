@@ -1,0 +1,7 @@
+template_path: ecs-roles.yaml
+stack_name: iatlas-api-roles-prod
+dependencies:
+  - prod/iatlas-access-secret-policy.yaml
+stack_tags: {{stack_group_config.stack_tags}}
+parameters:
+  AccessSecretPolicyArn: !stack_output_external iatlas-access-secret-policy-prod::AccessSecretPolicyArn

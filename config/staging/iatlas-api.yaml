@@ -1,0 +1,40 @@
+template_path: ecs.yaml
+stack_name: iatlas-staging
+dependencies:
+  - common/iatlasvpc.yaml
+  - staging/iatlas-kms.yaml
+  - staging/iatlas-db.yaml
+  - staging/iatlas-api-hostedzone.yaml
+  - staging/iatlas-api-certificate.yaml
+  - staging/iatlas-api-roles.yaml
+stack_tags: {{stack_group_config.stack_tags}}
+parameters:
+  InstanceType: 't3a.large'
+  GitLabContainerSecretName: 'gitlab_registry_creds_staging'
+  GitLabContainerPass: {{stack_group_config.gitlab_container_pass}}
+  GitLabContainerUser: {{stack_group_config.gitlab_container_user}}
+  VpcId: !stack_output_external iatlasvpc::VPCId
+  ClusterName: {{stack_group_config.ecs_cluster_name_staging}}
+  ServiceName: {{stack_group_config.ecs_service_name_staging}}
+  BastionHostSgId: !stack_output_external iatlasvpc::BastianSecurityGroup
+  PublicSubnetIds:
+    - !stack_output_external iatlasvpc::PublicSubnet
+    - !stack_output_external iatlasvpc::PublicSubnet1
+    - !stack_output_external iatlasvpc::PublicSubnet2
+  PrivateSubnetIds:
+    - !stack_output_external iatlasvpc::PrivateSubnet
+    - !stack_output_external iatlasvpc::PrivateSubnet1
+    - !stack_output_external iatlasvpc::PrivateSubnet2
+  MaxSize: '2'
+  DockerImageTag: {{stack_group_config.docker_image_tag}}
+  FlaskEnv: 'staging'
+  HostedZone: !stack_output_external iatlas-api-hostedzone-staging::HostedZoneId
+  CertificateArn: !stack_output_external iatlas-api-certificate-staging::CertificateArn
+  SubDomainName: {{stack_group_config.sub_domain_name_staging}}
+  DomainName: {{stack_group_config.domain_name_staging}}
+  DbHost: !stack_output_external iatlasdb-staging::ClusterEndpoint
+  DbPort: !stack_output_external iatlasdb-staging::ClusterPort
+  DbAccessSecurityGroup: !stack_output_external iatlasdb-staging::DBAccessSecurityGroup
+  DbCredsArn: !stack_output_external iatlasdb-staging::DbCredsArn
+  KmsKeyArn: !stack_output_external iatlas-kms-staging::KmsKeyArn
+  ExecutionRoleArn: !stack_output_external iatlas-api-roles-staging::ExecutionRoleArn
