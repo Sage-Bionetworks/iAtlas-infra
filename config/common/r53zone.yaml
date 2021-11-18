@@ -8,4 +8,4 @@ parameters:
   DnsDomainName: {{stack_group_config.domain_name}}
 hooks:
   before_launch:
-    - !cmd "wget {{stack_group_config.aws_infra_templates_root_url}}/v0.2.20/templates/R53-hostedzone.yaml -O templates/remote/R53-hostedzone.yaml"
+    - !cmd "wget {{stack_group_config.aws_infra_templates_root_url}}/v0.2.20/templates/R53-hostedzone.yaml -N -P templates/remote"
