@@ -9,7 +9,7 @@ install:
   - wget https://github.com/Sage-Bionetworks/infra-utils/archive/master.zip -O /tmp/infra-utils.zip
   - unzip -j -n /tmp/infra-utils.zip -x "infra-utils-master/.gitignore" "infra-utils-master/LICENSE" "infra-utils-master/*.md" "infra-utils-master/aws/*"
   - ./setup_aws_cli.sh || travis_terminate 1
-  - pip install pre-commit git+https://github.com/Sceptre/sceptre.git@5c0ab39 sceptre-ssm-resolver
+  - pip install pre-commit git+https://github.com/Sceptre/sceptre.git sceptre-ssm-resolver
 stages:
   - name: validate
   - name: deploy
