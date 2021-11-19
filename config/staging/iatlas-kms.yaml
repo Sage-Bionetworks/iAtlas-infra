@@ -1,4 +1,5 @@
-template_path: kms.yaml
+template:
+  path: kms.yaml
 stack_name: iatlas-kms-staging
 dependencies:
   - staging/iatlas-api-roles.yaml

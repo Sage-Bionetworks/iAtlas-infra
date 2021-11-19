@@ -1,4 +1,6 @@
-template_path: remote/vpc-mini.yaml
+template:
+  type: http
+  url: https://{{stack_group_config.admincentral_cf_bucket}}.s3.amazonaws.com/aws-infra/v0.3.2/VPC/vpc-mini.yaml
 stack_name: iatlasvpc
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
@@ -6,6 +8,3 @@ parameters:
   VpcName: iatlasvpc
   PublicSubnetZones: '{{stack_group_config.region}}a, {{stack_group_config.region}}b, {{stack_group_config.region}}c'
   PrivateSubnetZones: '{{stack_group_config.region}}a, {{stack_group_config.region}}b, {{stack_group_config.region}}c'
-hooks:
-  before_launch:
-    - !cmd "wget {{stack_group_config.aws_infra_templates_root_url}}/master/templates/VPC/vpc-mini.yaml -N -P templates/remote"

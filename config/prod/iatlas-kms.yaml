@@ -1,4 +1,5 @@
-template_path: kms.yaml
+template:
+  path: kms.yaml
 stack_name: iatlas-kms-prod
 dependencies:
   - prod/iatlas-api-roles.yaml
