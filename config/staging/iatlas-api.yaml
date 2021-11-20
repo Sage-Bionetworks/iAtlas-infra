@@ -1,4 +1,5 @@
-template_path: ecs.yaml
+template:
+  path: ecs.yaml
 stack_name: iatlas-staging
 dependencies:
   - common/iatlasvpc.yaml

@@ -1,4 +1,5 @@
-template_path: gitlab-manager-runner-roles.yaml
+template:
+  path: gitlab-manager-runner-roles.yaml
 stack_name: iatlas-gitlab-roles-prod
 dependencies:
   - common/iatlasvpc.yaml
