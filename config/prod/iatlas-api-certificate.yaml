@@ -1,4 +1,5 @@
-template_path: acm-certificate.yaml
+template:
+  path: acm-certificate.yaml
 stack_name: iatlas-api-certificate-prod
 stack_tags: {{stack_group_config.stack_tags}}
 dependencies:

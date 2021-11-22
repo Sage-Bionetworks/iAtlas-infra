@@ -1,4 +1,5 @@
-template_path: R53-hostedzone.yaml
+template:
+  path: R53-hostedzone.yaml
 stack_name: iatlas-api-hostedzone-staging
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:

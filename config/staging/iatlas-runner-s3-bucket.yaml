@@ -1,3 +1,4 @@
-template_path: gitlab-runner-s3-bucket.yaml
+template:
+  path: gitlab-runner-s3-bucket.yaml
 stack_name: iatlas-gitlab-s3-bucket-staging
 stack_tags: {{stack_group_config.stack_tags}}
