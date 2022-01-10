@@ -1,0 +1,15 @@
+template:
+  path: gitlab-manager-runner-roles.yaml
+stack_name: iatlas-gitlab-roles-staging
+dependencies:
+  - common/iatlasvpc.yaml
+  - staging/iatlas-runner-s3-bucket.yaml
+  - staging/iatlas-access-secret-policy.yaml
+stack_tags: {{stack_group_config.stack_tags}}
+parameters:
+  AccessSecretPolicyArn: !stack_output_external iatlas-access-secret-policy-staging::AccessSecretPolicyArn
+  VpcId: !stack_output_external iatlasvpc::VPCId
+  EcsClusterName: {{stack_group_config.ecs_cluster_name_staging}}
+  EcsServiceName: {{stack_group_config.ecs_service_name_staging}}
+  GitLabRunnerInstanceType: {{stack_group_config.gitlab_runner_instance_type_staging}}
+  CacheBucketArn: !stack_output_external iatlas-gitlab-s3-bucket-staging::CacheBucketArn

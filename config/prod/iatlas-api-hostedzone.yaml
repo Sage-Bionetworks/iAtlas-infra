@@ -1,0 +1,7 @@
+template:
+  path: R53-hostedzone.yaml
+stack_name: iatlas-api-hostedzone-prod
+stack_tags: {{stack_group_config.stack_tags}}
+parameters:
+  SubDomainName: {{stack_group_config.sub_domain_name}}
+  DomainName: {{stack_group_config.domain_name}}

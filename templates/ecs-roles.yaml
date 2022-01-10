@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  AccessSecretPolicyArn:
+    Description: The Access Secret Policy ARN
+    Type: String
+
+Resources:
+  #############
+  ### Roles ###
+  #############
+  # iAtlas API task execution IAM role
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - !Ref 'AccessSecretPolicyArn'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+
+Outputs:
+  StackName:
+    Value: !Ref 'AWS::StackName'
+  ExecutionRoleArn:
+    Description: ARN of the Execution Role.
+    Value: !GetAtt ExecutionRole.Arn

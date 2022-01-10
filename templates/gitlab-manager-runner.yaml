@@ -1,0 +1,379 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: 'EC2'
+        Parameters:
+          - 'ManagerImageId'
+          - 'ManagerInstanceType'
+          - 'GitLabRunnerInstanceType'
+          - 'MinNumInstances'
+          - 'MaxNumInstances'
+      - Label:
+          default: 'GitLab'
+        Parameters: ['GitLabUrl', 'GitLabRegToken']
+      - Label:
+          default: 'Runner'
+        Parameters:
+          - 'DbHost'
+          - 'DbPort'
+          - 'GitLabDockerImage'
+          - 'GitLabMaxBuilds'
+          - 'GitLabMaxConcurrentBuilds'
+          - 'GitLabIdleCount'
+          - 'GitLabIdleTime'
+          - 'GitLabOffPeakIdleCount'
+          - 'GitLabOffPeakIdleTime'
+          - 'GitLabOffPeakTimezone'
+
+Parameters:
+  CacheBucket:
+    Description: The S3 Bucket that the runner is allowed to use for caching.
+    Type: String
+  # See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/retrieve-ecs-optimized_AMI.html
+  # AMI will be and Amazon Linux 2 which should be very close to CentOs/RHEL.
+  ManagerImageId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id'
+    Description: A reference to the latest ECS Optimized AMI Id.
+  ManagerInstanceType:
+    Type: 'String'
+    Description: Instance type for GitLab Runners' manager.
+    AllowedValues:
+      - 't3a.2xlarge'
+      - 't3a.large'
+      - 't3a.medium'
+      - 't3a.micro'
+      - 't3a.nano'
+      - 't3a.small'
+      - 't3a.xlarge'
+    Default: 't3a.micro'
+  MinNumInstances:
+    Description: Minimum number of Runner server instances (managers) in Auto scaling group
+    Type: Number
+    Default: 1
+  MaxNumInstances:
+    Description: Maximum number of Runner server instances (managers) in Auto scaling group
+    Type: Number
+    Default: 1
+  GitLabUrl:
+    Type: 'String'
+    Description: GitLab instance URL. If there is a dedicated GitLab instance, pass the host url, otherwise use the default https://gitlab.com
+    Default: 'https://gitlab.com/'
+  GitLabRegToken:
+    Description: Registration token for GitLab Runner. Registration token must contain exactly 20 alphanumeric characters.
+    AllowedPattern: '^[-_a-zA-Z0-9]*$'
+    Type: 'String'
+    MinLength: '20'
+    MaxLength: '20'
+  GitLabRunnerInstanceType:
+    Type: 'String'
+    Description: Instance type for GitLab Runners.
+    AllowedValues:
+      - 't3a.nano'
+      - 't3a.micro'
+      - 't3a.small'
+      - 't3a.medium'
+      - 't3a.large'
+      - 't3a.xlarge'
+      - 't3a.2xlarge'
+      - 'c5d.large'
+      - 'c5d.xlarge'
+      - 'c5d.2xlarge'
+      - 'r5a.large'
+      - 'r5a.xlarge'
+      - 'r5a.2xlarge'
+    Default: 't3a.micro'
+    ConstraintDescription: must be a valid EC2 instance type
+  GitLabDockerImage:
+    Type: 'String'
+    Description: Name of the Docker image to be used.
+    Default: 'alpine'
+  GitLabMaxBuilds:
+    Type: 'Number'
+    Description: Maximum number of builds before the runner is terminated.
+    MinValue: 1
+    Default: 5
+  GitLabMaxConcurrentBuilds:
+    Type: 'Number'
+    Description: Maximum number of concurrent builds during working hours.
+    MinValue: 1
+    Default: 10
+  GitLabIdleCount:
+    Type: 'Number'
+    Description: Number of idle hosts during working hours.
+    MinValue: 0
+    Default: 0
+  GitLabIdleTime:
+    Type: 'Number'
+    Description: Number of seconds of inactivity before an idle host is shut down during working hours. Default is 300 seconds (5 minutes).
+    MinValue: 1
+    Default: 300
+  GitLabOffPeakTimezone:
+    Type: 'String'
+    Description: Timezone in which non-working hours are evaluated.
+    AllowedValues:
+      - 'America/New_York'
+    Default: 'America/New_York'
+  GitLabOffPeakIdleCount:
+    Type: 'Number'
+    Description: Number of idle hosts during non-working hours.
+    MinValue: 0
+    Default: 0
+  GitLabOffPeakIdleTime:
+    Type: 'Number'
+    Description: Number of seconds of inactivity before an idle host is shut down during non-working hours.
+    MinValue: 1
+    Default: 180
+  GitLabRunnerTag:
+    Type: String
+    Description: The tag (or tags) that permit the runner to run a job.
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: A VPC to run ECS instances in.
+  PrivateSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Private subnet IDs from the VPC for the manager instance. Minimum of two.
+  DbHost:
+    Type: String
+    Description: The endpoint for the DB cluster. For example - mystack-mydbcluster-123456789012.us-east-2.rds.amazonaws.com
+    Default: ''
+  DbPort:
+    Type: Number
+    Description: The port of the DB cluster.
+    Default: 5432
+  DBAccessSecurityGroupName:
+    Type: String
+    Description: The DB Security Group's name.
+  ManagerRole:
+    Description: 'The role for the manager'
+    Type: String
+  RunnersRole:
+    Description: 'The role for the runners'
+    Type: String
+
+Conditions:
+  UseSpotInstances: !Equals ['Yes', 'Never']
+
+Resources:
+  ##############
+  ### Groups ###
+  ##############
+  ManagerSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref 'VpcId'
+      GroupDescription: 'Security group for the GitLab Runner Manager.'
+      SecurityGroupIngress:
+        - Description: 'SSH traffic'
+          IpProtocol: 'tcp'
+          FromPort: 22
+          ToPort: 22
+          CidrIp: '0.0.0.0/0'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-CiRunner-Manager'
+  RunnerAutoScalingGroup:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      LaunchConfigurationName: !Ref Manager
+      VPCZoneIdentifier: !Ref PrivateSubnetIds
+      MinSize: !Ref MinNumInstances
+      MaxSize: !Ref MaxNumInstances
+      Cooldown: '300'
+      DesiredCapacity: !Ref MinNumInstances
+      Tags:
+        - Key: 'Name'
+          Value: !Sub ${AWS::StackName}
+          PropagateAtLaunch: true
+        - Key: 'PatchGroup'
+          Value: 'prod-default'
+          PropagateAtLaunch: true
+        - Key: 'ManagedInstanceMaintenanceTarget'
+          Value: 'yes'
+          PropagateAtLaunch: true
+    CreationPolicy:
+      ResourceSignal:
+        Count: !Ref MinNumInstances
+        Timeout: PT15M
+
+  #########################
+  ### Instance Profiles ###
+  #########################
+  ManagerInstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Roles:
+        - !Ref 'ManagerRole'
+  RunnersInstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Roles:
+        - !Ref 'RunnersRole'
+
+  ########################
+  ### Manager Instance ###
+  ########################
+  Manager:
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !Ref 'ManagerImageId'
+      InstanceType: !Ref 'ManagerInstanceType'
+      IamInstanceProfile: !Ref 'ManagerInstanceProfile'
+      SecurityGroups:
+        - !Ref 'ManagerSecurityGroup'
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          yum update -y aws-cfn-bootstrap
+          yum install -y aws-cfn-bootstrap
+
+          # Add the GitLab official repository to the package manager for CentOs/RHEL. See https://docs.gitlab.com/runner/install/linux-repository.html#installing-gitlab-runner.
+          curl -L "https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh" | bash
+
+          yum install -y docker gitlab-runner
+
+          # Install the files and packages from the metadata
+          /opt/aws/bin/cfn-init --stack '${AWS::StackName}' --region '${AWS::Region}' --resource Manager --configsets default
+
+          # Signal the status from cfn-init
+          /opt/aws/bin/cfn-signal -e $? --stack '${AWS::StackName}' --region '${AWS::Region}' --resource RunnerAutoScalingGroup
+
+    Metadata:
+      Comment: Install GitLab Runner
+      'AWS::CloudFormation::Init':
+        configSets:
+          install:
+            - 'packages'
+          config:
+            - 'config'
+          default:
+            - ConfigSet: 'install'
+            - ConfigSet: 'config'
+        packages:
+          packages:
+            yum:
+              'tzdata': []
+          files:
+            '/tmp/manager-config.template.toml':
+              owner: 'gitlab-runner'
+              group: 'gitlab-runner'
+              mode: '000600'
+              content: !Sub
+                - |
+                  [[runners]]
+                    limit = ${GitLabMaxConcurrentBuilds}
+                    environment = [
+                      "DB_HOST=${DbHost}",
+                      "DB_PORT=${DbPort}",
+                      "DOCKER_DRIVER=overlay2",
+                      "DOCKER_TLS_CERTDIR=/certs"
+                    ]
+                    [runners.docker]
+                      tls_verify = false
+                      image = "${GitLabDockerImage}"
+                      privileged = true
+                      disable_cache = true
+                      shm_size = 0
+                    [runners.cache]
+                      Type = "s3"
+                      Shared = true
+                    [runners.cache.s3]
+                      ServerAddress = "s3.${AWS::URLSuffix}"
+                      BucketName = "${CacheBucket}"
+                      BucketLocation = "${AWS::Region}"
+                    [runners.machine]
+                      IdleCount = ${GitLabIdleCount}
+                      IdleTime = ${GitLabIdleTime}
+                      MaxBuilds = ${GitLabMaxBuilds}
+                      MachineDriver = "amazonec2"
+                      MachineName = "gitlab-docker-machine-%s"
+                      MachineOptions = [
+                        "amazonec2-instance-type=${GitLabRunnerInstanceType}",
+                        "amazonec2-region=${AWS::Region}",
+                        "amazonec2-zone=a",
+                        "amazonec2-vpc-id=${VpcId}",
+                        "amazonec2-subnet-id=${PrivateSubnet}",
+                        "amazonec2-security-group=${AWS::StackName}-RunnersDockerSecurityGroup",
+                        "amazonec2-security-group=${DBAccessSecurityGroupName}",
+                        "amazonec2-tags=${AWS::StackName}-runner,gitlab-aws-autoscaler,gitlab,true,gitlab-runner-autoscale,true,PatchGroup,prod-default",
+                        "amazonec2-use-private-address",
+                        "amazonec2-iam-instance-profile=${RunnersInstanceProfile}"${LocalSpotVar}
+                      ]
+                      [[runners.machine.autoscaling]]
+                        Periods = ["* * 9-18 * * mon-fri *"]
+                        IdleCount = ${GitLabIdleCount}
+                        IdleTime = ${GitLabIdleTime}
+                        Timezone = "${GitLabOffPeakTimezone}"
+                      [[runners.machine.autoscaling]]
+                        Periods = ["* * 0-8,18-23 * * mon-fri *", "* * * * * sat,sun *"]
+                        IdleCount = ${GitLabOffPeakIdleCount}
+                        IdleTime = ${GitLabOffPeakIdleTime}
+                        Timezone = "${GitLabOffPeakTimezone}"
+                - LocalSpotVar: !If ['UseSpotInstances', ', "amazonec2-request-spot-instance=true", "amazonec2-spot-price=0.01"', '']
+                  PrivateSubnet: !Select
+                    - 0
+                    - !Ref PrivateSubnetIds
+            '/etc/cfn/cfn-hup.conf':
+              owner: 'root'
+              group: 'root'
+              mode: '000400'
+              content: !Sub |
+                [main]
+                stack=${AWS::StackId}
+                region=${AWS::Region}
+            '/etc/cfn/hooks.d/cfn-auto-reloader.conf':
+              content: !Sub |
+                [cfn-auto-reloader-hook]
+                triggers=post.update
+                path=Resources.Manager.Metadata.AWS::CloudFormation::Init
+                action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --region ${AWS::Region} --resource Manager --configsets default
+                runas=root
+          commands:
+            10-docker-machine:
+              command: curl -L https://gitlab-docker-machine-downloads.s3.amazonaws.com/master/docker-machine-Linux-x86_64 > /tmp/docker-machine && install /tmp/docker-machine /usr/local/bin/docker-machine && ln -s /usr/local/bin/docker-machine /usr/bin/docker-machine && rm /tmp/docker-machine
+            20-register-runner:
+              command: !Sub >-
+                gitlab-runner register --non-interactive --template-config /tmp/manager-config.template.toml --url ${GitLabUrl} --registration-token ${GitLabRegToken} --docker-image alpine:latest --executor shell --name ${AWS::StackName} --tag-list "${GitLabRunnerTag}" --run-untagged=false --locked=false
+            30-update-config:
+              command: !Sub >-
+                sed -i 's/concurrent = 1/concurrent = ${GitLabMaxConcurrentBuilds}/' /etc/gitlab-runner/config.toml &&sed -i 's/executor = "shell"/executor = "docker+machine"/' /etc/gitlab-runner/config.toml
+            40-gitlab-runner-restart:
+              command: gitlab-runner restart
+          services:
+            sysvinit:
+              'cfn-hup':
+                enabled: 'true'
+                ensureRunning: 'true'
+                files:
+                  - '/etc/cfn/cfn-hup.conf'
+                  - '/etc/cfn/hooks.d/cfn-auto-reloader.conf'
+        config:
+          files:
+            '/etc/rsyslog.d/25-gitlab-runner.conf':
+              owner: 'root'
+              group: 'root'
+              mode: '000644'
+              content: |
+                :programname, isequal, "gitlab-runner" /var/log/gitlab-runner.log
+          services:
+            sysvinit:
+              gitlab-runner:
+                ensureRunning: 'true'
+                enabled: 'true'
+                files: ['/etc/gitlab-runner/config.toml']
+              rsyslog:
+                ensureRunning: 'true'
+                enabled: 'true'
+                files: ['/etc/rsyslog.d/25-gitlab-runner.conf']
+
+Outputs:
+  StackName:
+    Value: !Ref 'AWS::StackName'
+  AwsRegion:
+    Value: !Ref "AWS::Region"
+  AwsAccountId:
+    Value: !Ref "AWS::AccountId"

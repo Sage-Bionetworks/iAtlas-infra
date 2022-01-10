@@ -1,17 +1,25 @@
-template_path: gitlab-runner.yaml
-stack_name: iatlas-gitlab-runner-prod
+template:
+  path: gitlab-manager-runner.yaml
+stack_name: iatlas-gitlab-manager-prod
 dependencies:
   - common/iatlasvpc.yaml
   - prod/iatlas-db.yaml
+  - prod/iatlas-runner-s3-bucket.yaml
+  - prod/iatlas-runner-roles.yaml
   - prod/iatlas-kms.yaml
-stack_tags:
-  Department: "CompOnc"
-  Project: "iAtlas"
-  OwnerEmail: "andrew.lamb@sagebase.org"
+stack_tags: {{stack_group_config.stack_tags}}
 parameters:
-  InstanceType: "t2.nano"
-  VpcName: iatlasvpc
-  VpcSubnet: PrivateSubnet
-  AMIId: ami-0810a318c4b1243c5 #AWS Linux from https://ami.sageit.org
-  Environment: prod
-  KeyName: "iatlas-gitlab-runner-prod"
+  VpcId: !stack_output_external iatlasvpc::VPCId
+  PrivateSubnetIds:
+    - !stack_output_external iatlasvpc::PrivateSubnet
+    - !stack_output_external iatlasvpc::PrivateSubnet1
+    - !stack_output_external iatlasvpc::PrivateSubnet2
+  DbHost: !stack_output_external iatlasdb-prod::ClusterEndpoint
+  DbPort: !stack_output_external iatlasdb-prod::ClusterPort
+  DBAccessSecurityGroupName: !stack_output_external iatlasdb-prod::DBAccessSecurityGroupName
+  GitLabRegToken: {{stack_group_config.gitlab_reg_token}}
+  GitLabRunnerInstanceType: {{stack_group_config.gitlab_runner_instance_type_prod}}
+  GitLabRunnerTag: 'prod'
+  CacheBucket: !stack_output_external iatlas-gitlab-s3-bucket-prod::CacheBucket
+  ManagerRole: !stack_output_external iatlas-gitlab-roles-prod::ManagerRole
+  RunnersRole: !stack_output_external iatlas-gitlab-roles-prod::RunnersRole
