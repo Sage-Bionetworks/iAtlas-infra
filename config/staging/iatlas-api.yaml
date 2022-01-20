@@ -3,6 +3,7 @@ template:
 stack_name: iatlas-staging
 dependencies:
   - common/iatlasvpc.yaml
+  - common/maintenance.yaml
   - staging/iatlas-kms.yaml
   - staging/iatlas-db.yaml
   - staging/iatlas-api-hostedzone.yaml

@@ -3,6 +3,7 @@ template:
 stack_name: iatlas-gitlab-manager-staging
 dependencies:
   - common/iatlasvpc.yaml
+  - common/maintenance.yaml
   - staging/iatlas-db.yaml
   - staging/iatlas-runner-s3-bucket.yaml
   - staging/iatlas-runner-roles.yaml

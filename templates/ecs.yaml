@@ -275,6 +275,12 @@ Resources:
         - Key: Name
           Value: !Sub ${AWS::StackName}
           PropagateAtLaunch: true
+        - Key: 'PatchGroup'
+          Value: 'prod-default'
+          PropagateAtLaunch: true
+        - Key: 'ManagedInstanceMaintenanceTarget'
+          Value: 'yes'
+          PropagateAtLaunch: true
     CreationPolicy:
       ResourceSignal:
         Timeout: PT15M

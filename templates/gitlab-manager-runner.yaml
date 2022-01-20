@@ -241,7 +241,6 @@ Resources:
 
           # Signal the status from cfn-init
           /opt/aws/bin/cfn-signal -e $? --stack '${AWS::StackName}' --region '${AWS::Region}' --resource RunnerAutoScalingGroup
-
     Metadata:
       Comment: Install GitLab Runner
       'AWS::CloudFormation::Init':
