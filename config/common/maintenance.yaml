@@ -1,0 +1,5 @@
+template:
+  type: http
+  url: https://{{stack_group_config.admincentral_cf_bucket}}.s3.amazonaws.com/aws-infra/v0.3.2/maintenance.yaml
+stack_name: maintenance
+stack_tags: {{stack_group_config.stack_tags}}
