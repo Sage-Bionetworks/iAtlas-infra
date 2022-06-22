@@ -13,6 +13,22 @@ config/prod launches an aurora postgresql resource, kms key, and the api app for
 
 ## Setup
 
+### Environment Variables
+
+The `config.yaml` picks up a number of environment variables. All have defaults to ensure the build runs with meaningful error messages. Some of the environment variables MUSt be set.
+
+- `GITLAB_CONTAINER_PASS`
+
+  This is the password (token) for accessing the GitLab container registry. These are generated and found in GitLab (the main CRI-iAtlas project) under `Settings->Repository->Deploy Tokens`. The scope should be "read_registry". See <https://gitlab.com/groups/cri-iatlas/-/settings/repository>
+
+- `GITLAB_CONTAINER_USER`
+
+  This is the username for accessing the GitLab container registry. These are generated and found in GitLab (the main CRI-iAtlas project) under `Settings->Repository->Deploy Tokens`. The scope should be "read_registry". See <https://gitlab.com/groups/cri-iatlas/-/settings/repository>
+
+- `GITLAB_REG_TOKEN`
+
+  This is the token for registering the Runner with GitLab. This is found in GitLab (the main CRI-iAtlas project) under `CI/CD->Runners->Register a group runner`. See <https://gitlab.com/groups/cri-iatlas/-/runners>
+
 ### Secrets
 
 For the API to access the database the following secrets must be created in the [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/)
@@ -33,8 +49,11 @@ The following MUST be created initially for the CI/CD to work in GitLab:
 
   The `staging` GitLab runner is used for general and staging environment builds in GitLab. Creating it will also create:
   - `common/iatlasvpc.yaml`
+  - `common/maintenance.yaml`
   - `staging/iatlas-kms.yaml`
   - `staging/iatlas-api-db.yaml`
+  - `staging/iatlas-runner-s3-bucket.yaml`
+  - `staging/iatlas-runner-roles.yaml`
 
   The database instance is needed so that the host values may be passed to the GitLab Runner. The host is a subnet and not available outside the VPC.
 
@@ -46,10 +65,13 @@ The following MUST be created initially for the CI/CD to work in GitLab:
 
   The `prod` GitLab runner is used for prod environment builds in GitLab only. Creating it will also create:
   - `common/iatlasvpc.yaml`
+  - `common/maintenance.yaml`
 
-    (this should already be created by the staging stack above)
+    (these should already be created by the staging stack above)
   - `prod/iatlas-kms.yaml`
   - `prod/iatlas-api-db.yaml`
+  - `prod/iatlas-runner-s3-bucket.yaml`
+  - `prod/iatlas-runner-roles.yaml`
 
   The database instance is needed so that the host values may be passed to the GitLab Runner. The host is a subnet and not available outside the VPC.
 

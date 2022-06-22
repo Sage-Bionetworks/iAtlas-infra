@@ -66,8 +66,8 @@ Parameters:
     Description: Registration token for GitLab Runner. Registration token must contain exactly 20 alphanumeric characters.
     AllowedPattern: '^[-_a-zA-Z0-9]*$'
     Type: 'String'
-    MinLength: '20'
-    MaxLength: '20'
+    MinLength: '29'
+    MaxLength: '29'
   GitLabRunnerInstanceType:
     Type: 'String'
     Description: Instance type for GitLab Runners.
