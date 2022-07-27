@@ -19,6 +19,7 @@ parameters:
   DBAccessSecurityGroupName: !stack_output_external iatlasdb-prod::DBAccessSecurityGroupName
   GitLabRegToken: {{stack_group_config.gitlab_reg_token}}
   GitLabRunnerInstanceType: {{stack_group_config.gitlab_runner_instance_type_prod}}
+  GitLabRunnerInstanceAmiId: {{stack_group_config.gitlab_runner_instance_ami_id_prod}}
   GitLabRunnerTag: 'prod'
   CacheBucket: !stack_output_external iatlas-gitlab-s3-bucket-prod::CacheBucket
   ManagerRole: !stack_output_external iatlas-gitlab-roles-prod::ManagerRole

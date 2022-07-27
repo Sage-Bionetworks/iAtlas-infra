@@ -12,6 +12,8 @@ gitlab_container_user: {{ environment_variable.GITLAB_CONTAINER_USER | default('
 gitlab_reg_token: {{ environment_variable.GITLAB_REG_TOKEN | default('_NEVER_GONNA_GET_IT_') }}
 gitlab_runner_instance_type_prod: 'r5a.2xlarge'
 gitlab_runner_instance_type_staging: 'r5a.2xlarge'
+gitlab_runner_instance_ami_id_prod: 'ami-08d4ac5b634553e16'
+gitlab_runner_instance_ami_id_staging: 'ami-08d4ac5b634553e16'
 ecs_cluster_name_prod: 'iatlas-prod-EcsCluster'
 ecs_service_name_prod: 'iatlas-prod-EcsService'
 ecs_cluster_name_staging: 'iatlas-staging-EcsCluster'
