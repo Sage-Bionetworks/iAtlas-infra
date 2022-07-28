@@ -70,7 +70,7 @@ Parameters:
     MinLength: '29'
     MaxLength: '29'
   GitLabRunnerInstanceAmiId:
-    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Type: 'String'
     Description: AMI Id to use for a Gitlab Runner
   GitLabRunnerInstanceType:
     Type: 'String'
