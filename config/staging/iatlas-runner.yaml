@@ -20,6 +20,7 @@ parameters:
   DBAccessSecurityGroupName: !stack_output_external iatlasdb-staging::DBAccessSecurityGroupName
   GitLabRegToken: {{stack_group_config.gitlab_reg_token}}
   GitLabRunnerInstanceType: {{stack_group_config.gitlab_runner_instance_type_staging}}
+  GitLabRunnerInstanceAmiId: {{stack_group_config.gitlab_runner_instance_ami_id_staging}}
   GitLabRunnerTag: 'staging'
   CacheBucket: !stack_output_external iatlas-gitlab-s3-bucket-staging::CacheBucket
   ManagerRole: !stack_output_external iatlas-gitlab-roles-staging::ManagerRole
