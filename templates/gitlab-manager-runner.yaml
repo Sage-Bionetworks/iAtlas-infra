@@ -8,7 +8,6 @@ Metadata:
         Parameters:
           - 'ManagerImageId'
           - 'ManagerInstanceType'
-          - 'GitLabRunnerInstanceAmiId'
           - 'GitLabRunnerInstanceType'
           - 'MinNumInstances'
           - 'MaxNumInstances'
@@ -69,9 +68,6 @@ Parameters:
     Type: 'String'
     MinLength: '29'
     MaxLength: '29'
-  GitLabRunnerInstanceAmiId:
-    Type: 'String'
-    Description: AMI Id to use for a Gitlab Runner
   GitLabRunnerInstanceType:
     Type: 'String'
     Description: Instance type for GitLab Runners.
@@ -296,7 +292,7 @@ Resources:
                       MachineDriver = "amazonec2"
                       MachineName = "gitlab-docker-machine-%s"
                       MachineOptions = [
-                        "amazonec2-ami=${GitLabRunnerInstanceAmiId}",
+                        "amazonec2-ami=${ManagerImageId}",
                         "amazonec2-instance-type=${GitLabRunnerInstanceType}",
                         "amazonec2-region=${AWS::Region}",
                         "amazonec2-zone=a",
