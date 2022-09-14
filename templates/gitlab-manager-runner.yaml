@@ -35,9 +35,8 @@ Parameters:
   # See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/retrieve-ecs-optimized_AMI.html
   # AMI will be and Amazon Linux 2 which should be very close to CentOs/RHEL.
   ManagerImageId:
-    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
-    Default: '/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id'
-    Description: A reference to the latest ECS Optimized AMI Id.
+    Type: AWS::EC2::Image::Id
+    Description: An ECS Optimized AMI Id.
   ManagerInstanceType:
     Type: 'String'
     Description: Instance type for GitLab Runners' manager.
