@@ -107,6 +107,9 @@ venv.bak/
 .idea/
 *.code-workspace
 git-crypt.key
+.tool-versions
+git-genui.config.json
+*.pem
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
@@ -124,5 +127,6 @@ lambdas/*.zip
 
 # temp files
 /temp/
+no_commit
 
 /infra-utils-master/
