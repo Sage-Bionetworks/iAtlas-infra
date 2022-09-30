@@ -146,11 +146,11 @@ Parameters:
   DBAccessSecurityGroupName:
     Type: String
     Description: The DB Security Group's name.
-  ManagerRole:
-    Description: 'The role for the manager'
+  ManagerInstanceProfile:
+    Description: The Name of the Manager Instance Profile.
     Type: String
-  RunnersRole:
-    Description: 'The role for the runners'
+  RunnersInstanceProfile:
+    Description: The Name of the Runners Instance Profile.
     Type: String
 
 Conditions:
@@ -197,20 +197,6 @@ Resources:
       ResourceSignal:
         Count: !Ref MinNumInstances
         Timeout: PT15M
-
-  #########################
-  ### Instance Profiles ###
-  #########################
-  ManagerInstanceProfile:
-    Type: 'AWS::IAM::InstanceProfile'
-    Properties:
-      Roles:
-        - !Ref 'ManagerRole'
-  RunnersInstanceProfile:
-    Type: 'AWS::IAM::InstanceProfile'
-    Properties:
-      Roles:
-        - !Ref 'RunnersRole'
 
   ########################
   ### Manager Instance ###

@@ -211,12 +211,6 @@ Outputs:
     Value: !Ref "AWS::Region"
   AwsAccountId:
     Value: !Ref "AWS::AccountId"
-  ManagerRole:
-    Description: Name of the Manager Role.
-    Value: !Ref 'ManagerRole'
-  RunnersRole:
-    Description: Name of the Runners Role.
-    Value: !Ref 'RunnersRole'
   RunnersRoleArn:
     Description: ARN of the Runners Role.
     Value: !GetAtt RunnersRole.Arn
@@ -226,5 +220,5 @@ Outputs:
     Description: Name of the Manager Instance Profile.
     Value: !Ref 'ManagerInstanceProfile'
   RunnersInstanceProfile:
-    Description: Name of the Manager Instance Profile.
+    Description: Name of the Runners Instance Profile.
     Value: !Ref 'RunnersInstanceProfile'
