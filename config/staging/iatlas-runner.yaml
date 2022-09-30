@@ -25,3 +25,5 @@ parameters:
   CacheBucket: !stack_output_external iatlas-gitlab-s3-bucket-staging::CacheBucket
   ManagerRole: !stack_output_external iatlas-gitlab-roles-staging::ManagerRole
   RunnersRole: !stack_output_external iatlas-gitlab-roles-staging::RunnersRole
+  ManagerInstanceProfile: !stack_output_external iatlas-gitlab-roles-staging::ManagerInstanceProfile
+  RunnersInstanceProfile: !stack_output_external iatlas-gitlab-roles-staging::RunnersInstanceProfile
