@@ -283,7 +283,6 @@ Resources:
                       MachineDriver = "amazonec2"
                       MachineName = "gitlab-docker-machine-%s"
                       MachineOptions = [
-                        "amazonec2-ami=${ManagerImageId}",
                         "amazonec2-instance-type=${GitLabRunnerInstanceType}",
                         "amazonec2-region=${AWS::Region}",
                         "amazonec2-zone=a",
