@@ -146,12 +146,16 @@ Parameters:
   DBAccessSecurityGroupName:
     Type: String
     Description: The DB Security Group's name.
-  ManagerRole:
-    Description: 'The role for the manager'
+  ManagerInstanceProfile:
+    Description: The Name of the Manager Instance Profile.
     Type: String
-  RunnersRole:
-    Description: 'The role for the runners'
+  RunnersInstanceProfile:
+    Description: The Name of the Runners Instance Profile.
     Type: String
+  GitLabRunnerAmiId:
+    Description: The AMI Id for the runner instance (must be Ubuntu)
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id'
 
 Conditions:
   UseSpotInstances: !Equals ['Yes', 'Never']
@@ -198,20 +202,6 @@ Resources:
         Count: !Ref MinNumInstances
         Timeout: PT15M
 
-  #########################
-  ### Instance Profiles ###
-  #########################
-  ManagerInstanceProfile:
-    Type: 'AWS::IAM::InstanceProfile'
-    Properties:
-      Roles:
-        - !Ref 'ManagerRole'
-  RunnersInstanceProfile:
-    Type: 'AWS::IAM::InstanceProfile'
-    Properties:
-      Roles:
-        - !Ref 'RunnersRole'
-
   ########################
   ### Manager Instance ###
   ########################
@@ -227,6 +217,8 @@ Resources:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
 
+          # The current manager AMI is Amazon Linux 2 AMD/x84
+
           yum update -y aws-cfn-bootstrap
           yum install -y aws-cfn-bootstrap
 
@@ -234,6 +226,11 @@ Resources:
           curl -L "https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh" | bash
 
           yum install -y docker gitlab-runner
+
+          # Install the GitLab forked version of Docker Machine. See https://docs.gitlab.com/runner/executors/docker_machine.html#install
+          curl -O "https://gitlab.com/gitlab-org/ci-cd/docker-machine/-/releases/v0.16.2-gitlab.18/downloads/docker-machine-Linux-x86_64"
+          cp docker-machine-Linux-x86_64 /usr/local/bin/docker-machine
+          chmod +x /usr/local/bin/docker-machine
 
           # Install the files and packages from the metadata
           /opt/aws/bin/cfn-init --stack '${AWS::StackName}' --region '${AWS::Region}' --resource Manager --configsets default
@@ -264,7 +261,6 @@ Resources:
                 - |
                   [[runners]]
                     limit = ${GitLabMaxConcurrentBuilds}
-                    concurrent = 1
                     environment = [
                       "DB_HOST=${DbHost}",
                       "DB_PORT=${DbPort}",
@@ -291,7 +287,7 @@ Resources:
                       MachineDriver = "amazonec2"
                       MachineName = "gitlab-docker-machine-%s"
                       MachineOptions = [
-                        "amazonec2-ami=${ManagerImageId}",
+                        "amazonec2-ami=${GitLabRunnerAmiId}",
                         "amazonec2-instance-type=${GitLabRunnerInstanceType}",
                         "amazonec2-region=${AWS::Region}",
                         "amazonec2-zone=a",
@@ -337,10 +333,10 @@ Resources:
               command: curl -L https://gitlab-docker-machine-downloads.s3.amazonaws.com/master/docker-machine-Linux-x86_64 > /tmp/docker-machine && install /tmp/docker-machine /usr/local/bin/docker-machine && ln -s /usr/local/bin/docker-machine /usr/bin/docker-machine && rm /tmp/docker-machine
             20-register-runner:
               command: !Sub >-
-                gitlab-runner register --non-interactive --template-config /tmp/manager-config.template.toml --url ${GitLabUrl} --registration-token ${GitLabRegToken} --docker-image alpine:latest --executor shell --name ${AWS::StackName} --tag-list "${GitLabRunnerTag}" --run-untagged=false --locked=false
+                gitlab-runner register --non-interactive --template-config /tmp/manager-config.template.toml --url ${GitLabUrl} --registration-token ${GitLabRegToken} --docker-image alpine:latest --executor docker+machine --name ${AWS::StackName} --tag-list "${GitLabRunnerTag}" --run-untagged=false --locked=false
             30-update-config:
               command: !Sub >-
-                sed -i 's/concurrent = 1/concurrent = ${GitLabMaxConcurrentBuilds}/' /etc/gitlab-runner/config.toml &&sed -i 's/executor = "shell"/executor = "docker+machine"/' /etc/gitlab-runner/config.toml
+                sed -i 's/concurrent = 1/concurrent = ${GitLabMaxConcurrentBuilds}/' /etc/gitlab-runner/config.toml
             40-gitlab-runner-restart:
               command: gitlab-runner restart
           services:

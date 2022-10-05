@@ -2,14 +2,19 @@
 
 Infrastructure to support the iAtlas project
 
-## Design
-
-These resources are created by sceptre:
-config/common includes the vpc and network attachments for the project. Also launches the GitLab runner instance.
-config/staging launches an aurora postgresql resource, kms key, and the api app for the staging environment.
-config/prod launches an aurora postgresql resource, kms key, and the api app for the production environment.
+## Architecture
 
 ![alt text][architecture]
+
+[architecture]: infra-arch.svg "iAtlas architecture"
+
+These resources are created by sceptre:
+
+- `config/common` includes the vpc and network attachments for the project. Also launches the GitLab runner instance.
+
+- `config/staging` launches an aurora postgresql resource, kms key, and the api app for the staging environment.
+
+- `config/prod` launches an aurora postgresql resource, kms key, and the api app for the production environment.
 
 ## Setup
 
@@ -121,7 +126,3 @@ region = us-east-1
 Install [Python](https://www.python.org/)
 
 See [https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/) for information on installing Python packages for a specific project.
-
-## Architecture
-
-![iAtlas architecture](./infra-arch.svg)
