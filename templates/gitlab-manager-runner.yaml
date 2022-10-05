@@ -152,6 +152,10 @@ Parameters:
   RunnersInstanceProfile:
     Description: The Name of the Runners Instance Profile.
     Type: String
+  GitLabRunnerAmiId:
+    Description: The AMI Id for the runner instance (must be Ubuntu)
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id'
 
 Conditions:
   UseSpotInstances: !Equals ['Yes', 'Never']
@@ -283,6 +287,7 @@ Resources:
                       MachineDriver = "amazonec2"
                       MachineName = "gitlab-docker-machine-%s"
                       MachineOptions = [
+                        "amazonec2-ami=${GitLabRunnerAmiId}",
                         "amazonec2-instance-type=${GitLabRunnerInstanceType}",
                         "amazonec2-region=${AWS::Region}",
                         "amazonec2-zone=a",
