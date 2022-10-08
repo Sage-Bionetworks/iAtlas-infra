@@ -10,8 +10,12 @@ gitlab_container_pass: {{ environment_variable.GITLAB_CONTAINER_PASS | default('
 gitlab_container_user: {{ environment_variable.GITLAB_CONTAINER_USER | default('_WILL_NOT_WORK_') }}
 # DO NOT store the token in git.
 gitlab_reg_token: {{ environment_variable.GITLAB_REG_TOKEN | default('_NEVER_GONNA_GET_IT_') }}
-gitlab_runner_instance_type_prod: 'c5d.2xlarge'
-gitlab_runner_instance_type_staging: 'c5d.2xlarge'
+gitlab_runner_instance_type_prod: 'r5a.2xlarge'
+# This should get recommended one:
+# aws ssm get-parameters --names /aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id --region us-east-1
+gitlab_runner_instance_type_staging: 'r5a.2xlarge'
+gitlab_manager_ami_id_prod: 'ami-03f8a7b55051ae0d4'
+gitlab_manager_ami_id_staging: 'ami-03f8a7b55051ae0d4'
 ecs_cluster_name_prod: 'iatlas-prod-EcsCluster'
 ecs_service_name_prod: 'iatlas-prod-EcsService'
 ecs_cluster_name_staging: 'iatlas-staging-EcsCluster'

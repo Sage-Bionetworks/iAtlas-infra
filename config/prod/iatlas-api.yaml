@@ -3,6 +3,7 @@ template:
 stack_name: iatlas-prod
 dependencies:
   - common/iatlasvpc.yaml
+  - common/maintenance.yaml
   - prod/iatlas-kms.yaml
   - prod/iatlas-db.yaml
   - prod/iatlas-api-hostedzone.yaml

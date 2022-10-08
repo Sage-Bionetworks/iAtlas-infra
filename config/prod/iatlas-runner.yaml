@@ -3,6 +3,7 @@ template:
 stack_name: iatlas-gitlab-manager-prod
 dependencies:
   - common/iatlasvpc.yaml
+  - common/maintenance.yaml
   - prod/iatlas-db.yaml
   - prod/iatlas-runner-s3-bucket.yaml
   - prod/iatlas-runner-roles.yaml
@@ -20,6 +21,7 @@ parameters:
   GitLabRegToken: {{stack_group_config.gitlab_reg_token}}
   GitLabRunnerInstanceType: {{stack_group_config.gitlab_runner_instance_type_prod}}
   GitLabRunnerTag: 'prod'
+  ManagerImageId: {{stack_group_config.gitlab_manager_ami_id_prod}}
   CacheBucket: !stack_output_external iatlas-gitlab-s3-bucket-prod::CacheBucket
-  ManagerRole: !stack_output_external iatlas-gitlab-roles-prod::ManagerRole
-  RunnersRole: !stack_output_external iatlas-gitlab-roles-prod::RunnersRole
+  ManagerInstanceProfile: !stack_output_external iatlas-gitlab-roles-prod::ManagerInstanceProfile
+  RunnersInstanceProfile: !stack_output_external iatlas-gitlab-roles-prod::RunnersInstanceProfile

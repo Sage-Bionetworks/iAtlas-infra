@@ -10,10 +10,8 @@ parameters:
     - 'arn:aws:iam::386990716034:root'
     - arn:aws:iam::386990716034:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_Administrator_13f4158c711c1d66
     - !stack_output_external iatlas-prod-ci-access::ServiceRoleArn
-    - !stack_output_external iatlas-prod-ci-access::ServiceRoleArn
   KeyUserArns:
     - arn:aws:iam::386990716034:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_Administrator_13f4158c711c1d66
-    - !stack_output_external iatlas-prod-ci-access::ServiceRoleArn
     - !stack_output_external iatlas-prod-ci-access::ServiceRoleArn
     - !stack_output_external iatlas-gitlab-roles-prod::RunnersRoleArn
     - !stack_output_external iatlas-api-roles-prod::ExecutionRoleArn

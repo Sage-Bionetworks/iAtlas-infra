@@ -21,6 +21,7 @@ parameters:
   GitLabRegToken: {{stack_group_config.gitlab_reg_token}}
   GitLabRunnerInstanceType: {{stack_group_config.gitlab_runner_instance_type_staging}}
   GitLabRunnerTag: 'staging'
+  ManagerImageId: {{stack_group_config.gitlab_manager_ami_id_staging}}
   CacheBucket: !stack_output_external iatlas-gitlab-s3-bucket-staging::CacheBucket
-  ManagerRole: !stack_output_external iatlas-gitlab-roles-staging::ManagerRole
-  RunnersRole: !stack_output_external iatlas-gitlab-roles-staging::RunnersRole
+  ManagerInstanceProfile: !stack_output_external iatlas-gitlab-roles-staging::ManagerInstanceProfile
+  RunnersInstanceProfile: !stack_output_external iatlas-gitlab-roles-staging::RunnersInstanceProfile
