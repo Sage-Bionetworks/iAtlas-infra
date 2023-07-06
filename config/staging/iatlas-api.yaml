@@ -28,7 +28,7 @@ parameters:
     - !stack_output_external iatlasvpc::PrivateSubnet1
     - !stack_output_external iatlasvpc::PrivateSubnet2
   MaxSize: '2'
-  DockerImageTag: {{stack_group_config.docker_image_tag}}
+  DockerImageTag: 'staging-latest'
   FlaskEnv: 'staging'
   HostedZone: !stack_output_external iatlas-api-hostedzone-staging::HostedZoneId
   CertificateArn: !stack_output_external iatlas-api-certificate-staging::CertificateArn
