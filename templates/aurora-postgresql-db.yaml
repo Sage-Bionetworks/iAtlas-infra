@@ -27,6 +27,7 @@ Parameters:
       - db.t3.large
       - db.t3.medium
       - db.t3.small
+      - db.r6g.large
   DBEngineVersion:
     Description: 'Database engine version'
     Type: String

@@ -157,9 +157,6 @@ Parameters:
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
     Default: '/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id'
 
-Conditions:
-  UseSpotInstances: !Equals ['Yes', 'Never']
-
 Resources:
   ##############
   ### Groups ###
@@ -297,7 +294,7 @@ Resources:
                         "amazonec2-security-group=${DBAccessSecurityGroupName}",
                         "amazonec2-tags=${AWS::StackName}-runner,gitlab-aws-autoscaler,gitlab,true,gitlab-runner-autoscale,true,PatchGroup,prod-default",
                         "amazonec2-use-private-address",
-                        "amazonec2-iam-instance-profile=${RunnersInstanceProfile}"${LocalSpotVar}
+                        "amazonec2-iam-instance-profile=${RunnersInstanceProfile}"
                       ]
                       [[runners.machine.autoscaling]]
                         Periods = ["* * 9-18 * * mon-fri *"]
@@ -309,8 +306,7 @@ Resources:
                         IdleCount = ${GitLabOffPeakIdleCount}
                         IdleTime = ${GitLabOffPeakIdleTime}
                         Timezone = "${GitLabOffPeakTimezone}"
-                - LocalSpotVar: !If ['UseSpotInstances', ', "amazonec2-request-spot-instance=true", "amazonec2-spot-price=0.01"', '']
-                  PrivateSubnet: !Select
+                - PrivateSubnet: !Select
                     - 0
                     - !Ref PrivateSubnetIds
             '/etc/cfn/cfn-hup.conf':
