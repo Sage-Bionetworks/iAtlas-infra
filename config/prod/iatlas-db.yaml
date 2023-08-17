@@ -10,5 +10,5 @@ parameters:
   KmsKey: !stack_output_external iatlas-kms-prod::KmsKey
   DbSecretPrefix: 'prod_'
   DbCredsName: 'iatlas_db_creds_encrypted_prod'
-  DBInstanceClass: 'db.t3.large'
+  DBInstanceClass: 'db.m6g.large'
   DBEngineVersion: '12.4'
