@@ -68,6 +68,7 @@ Parameters:
       - t3a.small
       - t3a.medium
       - t3a.large
+      - r5.large
     ConstraintDescription: Please choose a valid instance type.
   DockerImageTag:
     Type: String
