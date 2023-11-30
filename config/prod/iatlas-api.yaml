@@ -11,7 +11,7 @@ dependencies:
   - prod/iatlas-api-roles.yaml
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
-  InstanceType: 't3a.large'
+  InstanceType: 'r5.large'
   GitLabContainerSecretName: 'gitlab_registry_creds_prod'
   GitLabContainerPass: {{stack_group_config.gitlab_container_pass}}
   GitLabContainerUser: {{stack_group_config.gitlab_container_user}}
