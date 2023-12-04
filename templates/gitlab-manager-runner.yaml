@@ -78,12 +78,10 @@ Parameters:
       - 't3a.large'
       - 't3a.xlarge'
       - 't3a.2xlarge'
-      - 'c5d.large'
-      - 'c5d.xlarge'
-      - 'c5d.2xlarge'
       - 'r5a.large'
       - 'r5a.xlarge'
       - 'r5a.2xlarge'
+      - 'r5a.4xlarge'
     Default: 't3a.micro'
     ConstraintDescription: must be a valid EC2 instance type
   GitLabDockerImage:
