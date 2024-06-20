@@ -130,6 +130,14 @@ Parameters:
   VpcId:
     Type: AWS::EC2::VPC::Id
     Description: A VPC to run ECS instances in.
+  VolumeType:
+    Type: String
+    Description: The Amazon EBS volume type to be attached to the runner instance.
+    Default: gp3
+  RootSize:
+    Type: Number
+    Description: The root disk size of the runner instance (in GB).
+    Default: 24
   PrivateSubnetIds:
     Type: List<AWS::EC2::Subnet::Id>
     Description: Private subnet IDs from the VPC for the manager instance. Minimum of two.
@@ -286,6 +294,8 @@ Resources:
                         "amazonec2-instance-type=${GitLabRunnerInstanceType}",
                         "amazonec2-region=${AWS::Region}",
                         "amazonec2-zone=a",
+                        "amazonec2-root-size=${RootSize}",
+                        "amazonec2-volume-type=${VolumeType}",
                         "amazonec2-vpc-id=${VpcId}",
                         "amazonec2-subnet-id=${PrivateSubnet}",
                         "amazonec2-security-group=${AWS::StackName}-RunnersDockerSecurityGroup",
