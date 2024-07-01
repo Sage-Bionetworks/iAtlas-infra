@@ -137,7 +137,7 @@ Parameters:
   RootSize:
     Type: Number
     Description: The root disk size of the runner instance (in GB).
-    Default: 24
+    Default: 100
   PrivateSubnetIds:
     Type: List<AWS::EC2::Subnet::Id>
     Description: Private subnet IDs from the VPC for the manager instance. Minimum of two.
