@@ -11,7 +11,7 @@ dependencies:
   - staging/iatlas-api-roles.yaml
 stack_tags: {{stack_group_config.stack_tags}}
 parameters:
-  InstanceType: 'r5.large'
+  InstanceType: 'r5.xlarge'
   GitLabContainerSecretName: 'gitlab_registry_creds_staging'
   GitLabContainerPass: {{stack_group_config.gitlab_container_pass}}
   GitLabContainerUser: {{stack_group_config.gitlab_container_user}}
