@@ -13,8 +13,9 @@ gitlab_runner_instance_type_prod: 'r5a.4xlarge'
 # This should get recommended one:
 # aws ssm get-parameters --names /aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id --region us-east-1
 gitlab_runner_instance_type_staging: 'r5a.4xlarge'
-gitlab_manager_ami_id_prod: 'ami-03f8a7b55051ae0d4'
-gitlab_manager_ami_id_staging: 'ami-03f8a7b55051ae0d4'
+# AMI deprecation time: Sat Oct 03 2026 14:21:08 GMT-0700
+gitlab_manager_ami_id_prod: 'ami-04c6b54cfad330feb'
+gitlab_manager_ami_id_staging: 'ami-04c6b54cfad330feb'
 ecs_cluster_name_prod: 'iatlas-prod-EcsCluster'
 ecs_service_name_prod: 'iatlas-prod-EcsService'
 ecs_cluster_name_staging: 'iatlas-staging-EcsCluster'
