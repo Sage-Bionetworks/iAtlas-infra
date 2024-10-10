@@ -37,6 +37,8 @@ Parameters:
   ManagerImageId:
     Type: AWS::EC2::Image::Id
     Description: An ECS Optimized AMI Id.
+    # Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    # Default: '/aws/service/ecs/optimized-ami/amazon-linux-2/amzn2-ami-ecs-hvm-2.0.20241003-x86_64-ebs'
   ManagerInstanceType:
     Type: 'String'
     Description: Instance type for GitLab Runners' manager.
@@ -228,7 +230,7 @@ Resources:
           # Add the GitLab official repository to the package manager for CentOs/RHEL. See https://docs.gitlab.com/runner/install/linux-repository.html#installing-gitlab-runner.
           curl -L "https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh" | bash
 
-          yum install -y docker gitlab-runner
+          yum install -y docker gitlab-runner=15.9.0
 
           # Install the GitLab forked version of Docker Machine. See https://docs.gitlab.com/runner/executors/docker_machine.html#install
           curl -O "https://gitlab.com/gitlab-org/ci-cd/docker-machine/-/releases/v0.16.2-gitlab.18/downloads/docker-machine-Linux-x86_64"
