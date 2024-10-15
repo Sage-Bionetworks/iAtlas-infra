@@ -206,6 +206,9 @@ Resources:
       ResourceSignal:
         Count: !Ref MinNumInstances
         Timeout: PT15M
+    UpdatePolicy:
+      AutoScalingReplacingUpdate:
+        WillReplace: true
 
   ########################
   ### Manager Instance ###
