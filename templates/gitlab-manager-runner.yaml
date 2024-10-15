@@ -186,7 +186,7 @@ Resources:
   RunnerAutoScalingGroup:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
-      LaunchConfigurationName: !Ref Manager
+      LaunchConfigurationName: !Ref ManagerLaunchConfig
       VPCZoneIdentifier: !Ref PrivateSubnetIds
       MinSize: !Ref MinNumInstances
       MaxSize: !Ref MaxNumInstances
@@ -213,12 +213,13 @@ Resources:
   ########################
   ### Manager Instance ###
   ########################
-  Manager:
+  ManagerLaunchConfig:
     Type: 'AWS::AutoScaling::LaunchConfiguration'
     Properties:
       ImageId: !Ref 'ManagerImageId'
       InstanceType: !Ref 'ManagerInstanceType'
       IamInstanceProfile: !Ref 'ManagerInstanceProfile'
+      LaunchConfigurationName: !Sub '${AWS::StackName}-CiRunner-Manager'
       SecurityGroups:
         - !Ref 'ManagerSecurityGroup'
       UserData:
