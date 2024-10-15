@@ -187,8 +187,8 @@ Resources:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
       LaunchTemplate:
-        LaunchTemplateId: !Ref Manager
-        Version: !GetAtt Manager.LatestVersionNumber
+        LaunchTemplateId: !Ref ManagerLaunchTemplate
+        Version: !GetAtt ManagerLaunchTemplate.LatestVersionNumber
       VPCZoneIdentifier: !Ref PrivateSubnetIds
       MinSize: !Ref MinNumInstances
       MaxSize: !Ref MaxNumInstances
@@ -208,11 +208,14 @@ Resources:
       ResourceSignal:
         Count: !Ref MinNumInstances
         Timeout: PT15M
+    UpdatePolicy:
+      AutoScalingReplacingUpdate:
+        WillReplace: true
 
   ########################
   ### Manager Instance ###
   ########################
-  Manager:
+  ManagerLaunchTemplate:
     Type: 'AWS::EC2::LaunchTemplate'
     Properties:
       LaunchTemplateData:
@@ -238,11 +241,6 @@ Resources:
             sed -i "s/\/el\/7/\/amazon\/2/g" /etc/yum.repos.d/runner_gitlab*.repo
 
             yum install -y docker gitlab-runner-15.9.0-1
-
-            # Install the GitLab forked version of Docker Machine. See https://docs.gitlab.com/runner/executors/docker_machine.html#install
-            curl -O "https://gitlab.com/gitlab-org/ci-cd/docker-machine/-/releases/v0.16.2-gitlab.18/downloads/docker-machine-Linux-x86_64"
-            cp docker-machine-Linux-x86_64 /usr/local/bin/docker-machine
-            chmod +x /usr/local/bin/docker-machine
 
             # Install the files and packages from the metadata
             /opt/aws/bin/cfn-init --stack '${AWS::StackName}' --region '${AWS::Region}' --resource Manager --configsets default
@@ -349,7 +347,8 @@ Resources:
                 runas=root
           commands:
             10-docker-machine:
-              command: curl -L https://gitlab-docker-machine-downloads.s3.amazonaws.com/master/docker-machine-Linux-x86_64 > /tmp/docker-machine && install /tmp/docker-machine /usr/local/bin/docker-machine && ln -s /usr/local/bin/docker-machine /usr/bin/docker-machine && rm /tmp/docker-machine
+              # Install the GitLab forked version of Docker Machine. See https://docs.gitlab.com/runner/executors/docker_machine.html#install
+              command: curl -O "https://gitlab.com/gitlab-org/ci-cd/docker-machine/-/releases/v0.16.2-gitlab.18/downloads/docker-machine-Linux-x86_64" && cp docker-machine-Linux-x86_64 /usr/local/bin/docker-machine && chmod +x /usr/local/bin/docker-machine
             20-register-runner:
               command: !Sub >-
                 gitlab-runner register --non-interactive --template-config /tmp/manager-config.template.toml --url ${GitLabUrl} --registration-token ${GitLabRegToken} --docker-image alpine:latest --executor docker+machine --name ${AWS::StackName} --tag-list "${GitLabRunnerTag}" --run-untagged=false --locked=false
