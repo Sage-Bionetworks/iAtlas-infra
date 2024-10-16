@@ -219,7 +219,6 @@ Resources:
       ImageId: !Ref 'ManagerImageId'
       InstanceType: !Ref 'ManagerInstanceType'
       IamInstanceProfile: !Ref 'ManagerInstanceProfile'
-      LaunchConfigurationName: !Sub '${AWS::StackName}-CiRunner-Manager'
       SecurityGroups:
         - !Ref 'ManagerSecurityGroup'
       UserData:
