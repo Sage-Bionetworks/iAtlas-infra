@@ -186,9 +186,7 @@ Resources:
   RunnerAutoScalingGroup:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
-      LaunchTemplate:
-        LaunchTemplateId: !Ref ManagerLaunchTemplate
-        Version: !GetAtt ManagerLaunchTemplate.LatestVersionNumber
+      LaunchConfigurationName: !Ref ManagerLaunchConfig
       VPCZoneIdentifier: !Ref PrivateSubnetIds
       MinSize: !Ref MinNumInstances
       MaxSize: !Ref MaxNumInstances
@@ -215,44 +213,37 @@ Resources:
   ########################
   ### Manager Instance ###
   ########################
-  ManagerLaunchTemplate:
-    Type: 'AWS::EC2::LaunchTemplate'
+  ManagerLaunchConfig:
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
     Properties:
-      LaunchTemplateData:
-        IamInstanceProfile:
-          Name: !Ref 'ManagerInstanceProfile'
-        ImageId: !Ref 'ManagerImageId'
-        InstanceType: !Ref 'ManagerInstanceType'
-        SecurityGroupIds:
-          - !Ref 'ManagerSecurityGroup'
-        UserData:
-          Fn::Base64: !Sub |
-            #!/bin/bash -xe
+      ImageId: !Ref 'ManagerImageId'
+      InstanceType: !Ref 'ManagerInstanceType'
+      IamInstanceProfile: !Ref 'ManagerInstanceProfile'
+      LaunchConfigurationName: !Sub '${AWS::StackName}-CiRunner-Manager'
+      SecurityGroups:
+        - !Ref 'ManagerSecurityGroup'
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
 
-            # The current manager AMI is Amazon Linux 2 AMD/x84
+          # The current manager AMI is Amazon Linux 2 AMD/x84
 
-            yum update -y aws-cfn-bootstrap
-            yum install -y aws-cfn-bootstrap
+          yum update -y aws-cfn-bootstrap
+          yum install -y aws-cfn-bootstrap
 
-            # Add the GitLab official repository to the package manager for CentOs/RHEL. See https://docs.gitlab.com/runner/install/linux-repository.html#installing-gitlab-runner. Also see https://about.gitlab.com/blog/2022/05/02/amazon-linux-2-support-and-distro-specific-packages/.
-            curl -L "https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh" | bash
+          # Add the GitLab official repository to the package manager for CentOs/RHEL. See https://docs.gitlab.com/runner/install/linux-repository.html#installing-gitlab-runner. Also see https://about.gitlab.com/blog/2022/05/02/amazon-linux-2-support-and-distro-specific-packages/.
+          curl -L "https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh" | bash
 
-            # Patch to test or peg Amazon Linux 2 specific packages
-            sed -i "s/\/el\/7/\/amazon\/2/g" /etc/yum.repos.d/runner_gitlab*.repo
+          # Patch to test or peg Amazon Linux 2 specific packages
+          sed -i "s/\/el\/7/\/amazon\/2/g" /etc/yum.repos.d/runner_gitlab*.repo
 
-            yum install -y docker gitlab-runner-15.9.0-1
+          yum install -y docker gitlab-runner-15.9.0-1
 
-            # Install the files and packages from the metadata
-            /opt/aws/bin/cfn-init --stack '${AWS::StackName}' --region '${AWS::Region}' --resource Manager --configsets default
+          # Install the files and packages from the metadata
+          /opt/aws/bin/cfn-init --stack '${AWS::StackName}' --region '${AWS::Region}' --resource Manager --configsets default
 
-            # Signal the status from cfn-init
-            /opt/aws/bin/cfn-signal -e $? --stack '${AWS::StackName}' --region '${AWS::Region}' --resource RunnerAutoScalingGroup
-      LaunchTemplateName: !Sub '${AWS::StackName}-CiRunner-Manager'
-      TagSpecifications:
-        - ResourceType: "launch-template"
-          Tags:
-          - Key: 'Name'
-            Value: !Sub '${AWS::StackName}-CiRunner-Manager'
+          # Signal the status from cfn-init
+          /opt/aws/bin/cfn-signal -e $? --stack '${AWS::StackName}' --region '${AWS::Region}' --resource RunnerAutoScalingGroup
     Metadata:
       Comment: Register GitLab Runner
       'AWS::CloudFormation::Init':
