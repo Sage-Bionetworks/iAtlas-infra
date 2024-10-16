@@ -220,7 +220,7 @@ Resources:
     Properties:
       LaunchTemplateData:
         IamInstanceProfile:
-          Arn: !Ref 'ManagerInstanceProfile'
+          Name: !Ref 'ManagerInstanceProfile'
         ImageId: !Ref 'ManagerImageId'
         InstanceType: !Ref 'ManagerInstanceType'
         SecurityGroups:
