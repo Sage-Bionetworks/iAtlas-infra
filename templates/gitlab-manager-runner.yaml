@@ -186,7 +186,9 @@ Resources:
   RunnerAutoScalingGroup:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
-      LaunchConfigurationName: !Ref ManagerLaunchConfig
+      LaunchTemplate:
+        LaunchTemplateId: !Ref ManagerLaunchTemplate
+        Version: !GetAtt ManagerLaunchTemplate.LatestVersionNumber
       VPCZoneIdentifier: !Ref PrivateSubnetIds
       MinSize: !Ref MinNumInstances
       MaxSize: !Ref MaxNumInstances
@@ -213,25 +215,26 @@ Resources:
   ########################
   ### Manager Instance ###
   ########################
-  ManagerLaunchConfig:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
+  ManagerLaunchTemplate:
+    Type: 'AWS::EC2::LaunchTemplate'
     Properties:
-      ImageId: !Ref 'ManagerImageId'
-      InstanceType: !Ref 'ManagerInstanceType'
-      IamInstanceProfile: !Ref 'ManagerInstanceProfile'
-      LaunchConfigurationName: !Sub '${AWS::StackName}-CiRunner-Manager'
-      SecurityGroups:
-        - !Ref 'ManagerSecurityGroup'
-      UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash -xe
+      LaunchTemplateData:
+        IamInstanceProfile:
+          Arn: !Ref 'ManagerInstanceProfile'
+        ImageId: !Ref 'ManagerImageId'
+        InstanceType: !Ref 'ManagerInstanceType'
+        SecurityGroups:
+          - !Ref 'ManagerSecurityGroup'
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash -xe
 
-          # The current manager AMI is Amazon Linux 2 AMD/x84
+            # The current manager AMI is Amazon Linux 2 AMD/x84
 
-          yum update -y aws-cfn-bootstrap
-          yum install -y aws-cfn-bootstrap
+            yum update -y aws-cfn-bootstrap
+            yum install -y aws-cfn-bootstrap
 
-          # Add the GitLab official repository to the package manager for CentOs/RHEL. See https://docs.gitlab.com/runner/install/linux-repository.html#installing-gitlab-runner. Also see https://about.gitlab.com/blog/2022/05/02/amazon-linux-2-support-and-distro-specific-packages/.
+            # Add the GitLab official repository to the package manager for CentOs/RHEL. See https://docs.gitlab.com/runner/install/linux-repository.html#installing-gitlab-runner. Also see https://about.gitlab.com/blog/2022/05/02/amazon-linux-2-support-and-distro-specific-packages/.
             curl -L "https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh" | bash
 
             # Patch to test or peg Amazon Linux 2 specific packages
@@ -239,18 +242,19 @@ Resources:
 
             yum install -y docker gitlab-runner-15.9.0-1
 
-          # Install the GitLab forked version of Docker Machine. See https://docs.gitlab.com/runner/executors/docker_machine.html#install
-          curl -O "https://gitlab.com/gitlab-org/ci-cd/docker-machine/-/releases/v0.16.2-gitlab.18/downloads/docker-machine-Linux-x86_64"
-          cp docker-machine-Linux-x86_64 /usr/local/bin/docker-machine
-          chmod +x /usr/local/bin/docker-machine
+            # Install the files and packages from the metadata
+            /opt/aws/bin/cfn-init --stack '${AWS::StackName}' --region '${AWS::Region}' --resource Manager --configsets default
 
-          # Install the files and packages from the metadata
-          /opt/aws/bin/cfn-init --stack '${AWS::StackName}' --region '${AWS::Region}' --resource Manager --configsets default
-
-          # Signal the status from cfn-init
-          /opt/aws/bin/cfn-signal -e $? --stack '${AWS::StackName}' --region '${AWS::Region}' --resource RunnerAutoScalingGroup
+            # Signal the status from cfn-init
+            /opt/aws/bin/cfn-signal -e $? --stack '${AWS::StackName}' --region '${AWS::Region}' --resource RunnerAutoScalingGroup
+      LaunchTemplateName: !Sub '${AWS::StackName}-CiRunner-Manager'
+      TagSpecifications:
+        - ResourceType: "launch-template"
+          Tags:
+          - Key: 'Name'
+            Value: !Sub '${AWS::StackName}-CiRunner-Manager'
     Metadata:
-      Comment: Install GitLab Runner
+      Comment: Register GitLab Runner
       'AWS::CloudFormation::Init':
         configSets:
           install:
@@ -343,7 +347,8 @@ Resources:
                 runas=root
           commands:
             10-docker-machine:
-              command: curl -L https://gitlab-docker-machine-downloads.s3.amazonaws.com/master/docker-machine-Linux-x86_64 > /tmp/docker-machine && install /tmp/docker-machine /usr/local/bin/docker-machine && ln -s /usr/local/bin/docker-machine /usr/bin/docker-machine && rm /tmp/docker-machine
+              # Install the GitLab forked version of Docker Machine. See https://docs.gitlab.com/runner/executors/docker_machine.html#install
+              command: curl -O "https://gitlab.com/gitlab-org/ci-cd/docker-machine/-/releases/v0.16.2-gitlab.18/downloads/docker-machine-Linux-x86_64" && cp docker-machine-Linux-x86_64 /usr/local/bin/docker-machine && chmod +x /usr/local/bin/docker-machine
             20-register-runner:
               command: !Sub >-
                 gitlab-runner register --non-interactive --template-config /tmp/manager-config.template.toml --url ${GitLabUrl} --registration-token ${GitLabRegToken} --docker-image alpine:latest --executor docker+machine --name ${AWS::StackName} --tag-list "${GitLabRunnerTag}" --run-untagged=false --locked=false
