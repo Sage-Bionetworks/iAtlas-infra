@@ -269,7 +269,9 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier: !Ref 'PrivateSubnetIds'
-      LaunchConfigurationName: !Ref 'ContainerInstances'
+      LaunchTemplate:
+        LaunchTemplateId: !Ref ContainerLaunchTemplate
+        Version: !GetAtt ContainerLaunchTemplate.LatestVersionNumber
       MinSize: !Ref 'MinSize'
       MaxSize: !Ref 'MaxSize'
       DesiredCapacity: !Ref 'DesiredCapacity'
@@ -346,6 +348,9 @@ Resources:
     Properties:
       # This must be named so that the CI scripts may use it.
       ClusterName: !Ref ClusterName
+      ClusterSettings:
+        - Name: containerInsights
+        - Value: enabled
 
   ListenerCertificate:
     Type: AWS::ElasticLoadBalancingV2::ListenerCertificate
@@ -409,22 +414,24 @@ Resources:
           AliasTarget:
             HostedZoneId: !GetAtt 'EcsAlb.CanonicalHostedZoneID'
             DNSName: !GetAtt 'EcsAlb.DNSName'
-  ContainerInstances:
-    Type: AWS::AutoScaling::LaunchConfiguration
+  ContainerLaunchTemplate:
+    Type: 'AWS::EC2::LaunchTemplate'
     Properties:
-      ImageId: !Ref 'LatestEcsAmiId'
-      SecurityGroups:
-        - !Ref 'EcsSecurityGroup'
-        - !Ref 'DbAccessSecurityGroup'
-      InstanceType: !Ref 'InstanceType'
-      IamInstanceProfile: !Ref 'EC2InstanceProfile'
-      UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash -xe
-          echo ECS_CLUSTER=${EcsCluster} >> /etc/ecs/ecs.config
-          echo ECS_ENABLE_AWSLOGS_EXECUTIONROLE_OVERRIDE=true >> /etc/ecs/ecs.config
-          yum install -y aws-cfn-bootstrap
-          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource EcsAutoScalingGroup --region ${AWS::Region}
+      LaunchTemplateData:
+        IamInstanceProfile:
+          Name: !Ref 'EC2InstanceProfile'
+        ImageId: !Ref 'LatestEcsAmiId'
+        InstanceType: !Ref 'InstanceType'
+        SecurityGroupIds:
+          - !Ref 'EcsSecurityGroup'
+          - !Ref 'DbAccessSecurityGroup'
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash -xe
+            echo ECS_CLUSTER=${EcsCluster} >> /etc/ecs/ecs.config
+            echo ECS_ENABLE_AWSLOGS_EXECUTIONROLE_OVERRIDE=true >> /etc/ecs/ecs.config
+            yum install -y aws-cfn-bootstrap
+            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource EcsAutoScalingGroup --region ${AWS::Region}
   EcsService:
     Type: AWS::ECS::Service
     DependsOn:
