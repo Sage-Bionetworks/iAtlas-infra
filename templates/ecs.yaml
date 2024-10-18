@@ -350,7 +350,7 @@ Resources:
       ClusterName: !Ref ClusterName
       ClusterSettings:
         - Name: containerInsights
-        - Value: enabled
+          Value: enabled
 
   ListenerCertificate:
     Type: AWS::ElasticLoadBalancingV2::ListenerCertificate
