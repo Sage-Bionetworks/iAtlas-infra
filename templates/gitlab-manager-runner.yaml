@@ -243,13 +243,13 @@ Resources:
             yum install -y docker gitlab-runner-15.9.0-1
 
             # Install the files and packages from the metadata
-            /opt/aws/bin/cfn-init --stack '${AWS::StackName}' --region '${AWS::Region}' --resource Manager --configsets default
+            /opt/aws/bin/cfn-init --stack '${AWS::StackName}' --region '${AWS::Region}' --resource ManagerLaunchTemplate --configsets default
 
             # Signal the status from cfn-init
             /opt/aws/bin/cfn-signal -e $? --stack '${AWS::StackName}' --region '${AWS::Region}' --resource RunnerAutoScalingGroup
-      LaunchTemplateName: !Sub '${AWS::StackName}-CiRunner-Manager'
+      LaunchTemplateName: !Sub '${AWS::StackName}'
       TagSpecifications:
-        - ResourceType: "launch-template"
+        - ResourceType: 'launch-template'
           Tags:
           - Key: 'Name'
             Value: !Sub '${AWS::StackName}-CiRunner-Manager'

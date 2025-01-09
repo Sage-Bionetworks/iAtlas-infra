@@ -24,31 +24,19 @@ The `config.yaml` picks up a number of environment variables. All have defaults 
 
 - `GITLAB_CONTAINER_PASS`
 
-  This is the password (token) for accessing the GitLab container registry. These are generated and found in GitLab (the main CRI-iAtlas project) under `Settings->Repository->Deploy Tokens`. The scope should be "read_registry". See <https://gitlab.com/groups/cri-iatlas/-/settings/repository>
+  This is the password (token) for accessing the GitLab container registry. These are generated and found in GitLab (the main CRI-iAtlas project) under `Settings->Repository->Deploy Tokens`. The scope should be "read_registry". See <https://gitlab.com/groups/cri-iatlas/-/settings/repository#js-deploy-tokens>
 
 - `GITLAB_CONTAINER_USER`
 
-  This is the username for accessing the GitLab container registry. These are generated and found in GitLab (the main CRI-iAtlas project) under `Settings->Repository->Deploy Tokens`. The scope should be "read_registry". See <https://gitlab.com/groups/cri-iatlas/-/settings/repository>
+  This is the username for accessing the GitLab container registry. These are generated and found in GitLab (the main CRI-iAtlas project) under `Settings->Repository->Deploy Tokens`. The scope should be "read_registry". See <https://gitlab.com/groups/cri-iatlas/-/settings/repository#js-deploy-tokens>
 
 - `GITLAB_REG_TOKEN`
 
   This is the token for registering the Runner with GitLab. This is found in GitLab (the main CRI-iAtlas project) under `CI/CD->Runners->Register a group runner`. See <https://gitlab.com/groups/cri-iatlas/-/runners>
 
-### Secrets
-
-For the API to access the database the following secrets must be created in the [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/)
-
-- `iatlas_gitlab_registry_creds`
-
-  with values for:
-  - `username`
-  - `password`
-
-  These are readonly credentials for accessing the container registry in GitLab. The username and password (deploy token) are generated in [GitLab](https://gitlab.com/groups/cri-iatlas/-/settings/repository#js-deploy-tokens)
-
 ### Manual Deploys
 
-The following MUST be created initially for the CI/CD to work in GitLab:
+The following MUST be created initially:
 
 - `staging/iatlas-runner.yaml`
 
@@ -68,7 +56,7 @@ The following MUST be created initially for the CI/CD to work in GitLab:
 
 - `prod/iatlas-runner.yaml`
 
-  The `prod` GitLab runner is used for prod environment builds in GitLab only. Creating it will also create:
+  The `prod` GitLab runner is used for prod environment builds only. Creating it will also create:
   - `common/iatlasvpc.yaml`
   - `common/maintenance.yaml`
 
