@@ -16,6 +16,21 @@ These resources are created by sceptre:
 
 - `config/prod` launches an aurora postgresql resource, kms key, and the api app for the production environment.
 
+## TODO
+
+- [ ] Update deprecated `docker-machine` to use `docker-autoscaler`.
+
+  See:
+  - <https://docs.gitlab.com/runner/executors/docker_autoscaler.html#examples>
+  - <https://gitlab.com/gitlab-org/fleeting/plugins/aws/-/tree/main>
+  - <https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-runnersautoscaler-section>
+
+- [ ] Update deprecated Gitlab registration token to the new runner registration workflow.
+
+  See:
+  - <https://docs.gitlab.com/ee/ci/runners/new_creation_workflow.html>
+  - <https://docs.gitlab.com/ee/ci/runners/new_creation_workflow.html#register-a-runner-with-a-project-token>
+
 ## Setup
 
 ### Environment Variables
