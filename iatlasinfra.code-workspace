@@ -1,0 +1,39 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "cody.codebase": "git@github.com:Sage-Bionetworks/iAtlas-infra.git",
+        "cody.autocomplete.languages": {
+            "markdown": true,
+            "yaml": true
+        },
+        "editor.wordWrap": "on",
+        "markdown-preview-github-styles.colorTheme": "light",
+        "workbench.editor.highlightModifiedTabs": true,
+        "yaml.customTags": [
+            "!Base64 scalar",
+            "!Cidr scalar",
+            "!And sequence",
+            "!Equals sequence",
+            "!If sequence",
+            "!Not sequence",
+            "!Or sequence",
+            "!Condition scalar",
+            "!FindInMap sequence",
+            "!GetAtt scalar",
+            "!GetAtt sequence",
+            "!GetAZs scalar",
+            "!ImportValue scalar",
+            "!Join sequence",
+            "!Select sequence",
+            "!Split sequence",
+            "!stack_output_external scalar",
+            "!Sub scalar",
+            "!Transform mapping",
+            "!Ref scalar",
+        ]
+    }
+}

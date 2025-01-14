@@ -73,9 +73,6 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# pyenv
-.python-version
-
 # celery beat schedule file
 celerybeat-schedule
 
@@ -106,8 +103,8 @@ venv.bak/
 
 .idea/
 *.code-workspace
+!iatlasinfra.code-workspace
 git-crypt.key
-.tool-versions
 git-genui.config.json
 *.pem
 
