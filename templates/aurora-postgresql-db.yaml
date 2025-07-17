@@ -163,6 +163,7 @@ Resources:
   DBInstance:
     Type: AWS::RDS::DBInstance
     Properties:
+      AllocatedStorage: 120
       DBClusterIdentifier: !Ref DBCluster
       DBParameterGroupName: !Ref DBParameterGroup
       Engine: aurora-postgresql
