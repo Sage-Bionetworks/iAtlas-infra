@@ -40,12 +40,7 @@ Parameters:
     ConstraintDescription: 'Must be in the range [1115-65535]'
     MinValue: 1115
     MaxValue: 65535
-  AllocatedStorage:
-    Description: 'Storage allocated to the DB cluster in GB'
-    Type: Number
-    Default: 100
-    MinValue: 10
-    MaxValue: 65536
+
 
 Resources:
   #############
@@ -162,7 +157,6 @@ Resources:
       DBSubnetGroupName: !Ref DBSubnetGroup
       DBClusterParameterGroupName: !Ref RDSDBClusterParameterGroup
       StorageEncrypted: true
-      AllocatedStorage: !Ref AllocatedStorage
       PreferredMaintenanceWindow: 'sat:06:54-sat:07:24'
       VpcSecurityGroupIds:
         - !Ref ClusterSecurityGroup
