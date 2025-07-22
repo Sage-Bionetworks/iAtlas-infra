@@ -40,6 +40,12 @@ Parameters:
     ConstraintDescription: 'Must be in the range [1115-65535]'
     MinValue: 1115
     MaxValue: 65535
+  AllocatedStorage:
+    Description: 'Storage allocated to the DB cluster in GB'
+    Type: Number
+    Default: 100
+    MinValue: 10
+    MaxValue: 65536
 
 Resources:
   #############
@@ -93,7 +99,7 @@ Resources:
       SourceSecurityGroupId: !Ref ClusterSecurityGroup
       Description: 'Self Reference'
   DBSubnetGroup:
-    Type: AWS::DocDB::DBSubnetGroup
+    Type: AWS::RDS::DBSubnetGroup
     Properties:
       DBSubnetGroupDescription: !Ref 'AWS::StackName'
       SubnetIds:
@@ -115,9 +121,10 @@ Resources:
     Properties:
       Description: !Sub 'Aurora Parameter Group for ${AWS::StackName}'
       Family: aurora-postgresql12
-# Currently not changing parameters from default values
-# https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Reference.html#AuroraPostgreSQL.Reference.ParameterGroups
-#     Parameters:
+      Parameters:
+        temp_buffers: '256MB'
+        work_mem: '64MB'
+        maintenance_work_mem: '256MB'
 
   ###############
   ### Secrets ###
@@ -155,6 +162,7 @@ Resources:
       DBSubnetGroupName: !Ref DBSubnetGroup
       DBClusterParameterGroupName: !Ref RDSDBClusterParameterGroup
       StorageEncrypted: true
+      AllocatedStorage: !Ref AllocatedStorage
       PreferredMaintenanceWindow: 'sat:06:54-sat:07:24'
       VpcSecurityGroupIds:
         - !Ref ClusterSecurityGroup
@@ -163,7 +171,6 @@ Resources:
   DBInstance:
     Type: AWS::RDS::DBInstance
     Properties:
-      AllocatedStorage: 120
       DBClusterIdentifier: !Ref DBCluster
       DBParameterGroupName: !Ref DBParameterGroup
       Engine: aurora-postgresql
