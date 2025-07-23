@@ -41,6 +41,7 @@ Parameters:
     MinValue: 1115
     MaxValue: 65535
 
+
 Resources:
   #############
   ### Roles ###
@@ -93,7 +94,7 @@ Resources:
       SourceSecurityGroupId: !Ref ClusterSecurityGroup
       Description: 'Self Reference'
   DBSubnetGroup:
-    Type: AWS::DocDB::DBSubnetGroup
+    Type: AWS::RDS::DBSubnetGroup
     Properties:
       DBSubnetGroupDescription: !Ref 'AWS::StackName'
       SubnetIds:
@@ -115,9 +116,10 @@ Resources:
     Properties:
       Description: !Sub 'Aurora Parameter Group for ${AWS::StackName}'
       Family: aurora-postgresql12
-# Currently not changing parameters from default values
-# https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Reference.html#AuroraPostgreSQL.Reference.ParameterGroups
-#     Parameters:
+      Parameters:
+        temp_buffers: '256MB'
+        work_mem: '64MB'
+        maintenance_work_mem: '256MB'
 
   ###############
   ### Secrets ###
