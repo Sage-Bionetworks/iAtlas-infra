@@ -96,7 +96,8 @@ Resources:
   DBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
-      DBSubnetGroupDescription: !Ref 'AWS::StackName'
+      DBSubnetGroupDescription: !Sub '${AWS::StackName}-subnet'
+      DBSubnetGroupName: !Sub '${AWS::StackName}-subnet'
       SubnetIds:
         - !ImportValue
           'Fn::Sub': '${AWS::Region}-${VpcName}-PrivateSubnet'
