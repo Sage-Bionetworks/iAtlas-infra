@@ -118,8 +118,8 @@ Resources:
       Description: !Sub 'Aurora Parameter Group for ${AWS::StackName}'
       Family: aurora-postgresql12
       Parameters:
-        temp_buffers: '256MB'
-        work_mem: '64MB'
+        temp_buffers: '8192'
+        work_mem: '256MB'
         maintenance_work_mem: '256MB'
 
   ###############
