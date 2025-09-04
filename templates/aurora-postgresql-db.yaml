@@ -119,7 +119,7 @@ Resources:
       Family: aurora-postgresql12
       Parameters:
         temp_buffers: '8192'
-        work_mem: '64MB'
+        work_mem: '256MB'
         maintenance_work_mem: '256MB'
 
   ###############
