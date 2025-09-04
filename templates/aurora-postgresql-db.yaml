@@ -94,7 +94,7 @@ Resources:
       SourceSecurityGroupId: !Ref ClusterSecurityGroup
       Description: 'Self Reference'
   DBSubnetGroup:
-    Type: AWS::RDS::DBSubnetGroup
+    Type: AWS::DocDB::DBSubnetGroup
     Properties:
       DBSubnetGroupDescription: !Sub '${AWS::StackName}-subnet'
       DBSubnetGroupName: !Sub '${AWS::StackName}-subnet'
