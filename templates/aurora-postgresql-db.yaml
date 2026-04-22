@@ -41,6 +41,7 @@ Parameters:
     MinValue: 1115
     MaxValue: 65535
 
+
 Resources:
   #############
   ### Roles ###
@@ -95,7 +96,8 @@ Resources:
   DBSubnetGroup:
     Type: AWS::DocDB::DBSubnetGroup
     Properties:
-      DBSubnetGroupDescription: !Ref 'AWS::StackName'
+      DBSubnetGroupDescription: !Sub '${AWS::StackName}-subnet'
+      DBSubnetGroupName: !Sub '${AWS::StackName}-subnet'
       SubnetIds:
         - !ImportValue
           'Fn::Sub': '${AWS::Region}-${VpcName}-PrivateSubnet'
@@ -115,9 +117,10 @@ Resources:
     Properties:
       Description: !Sub 'Aurora Parameter Group for ${AWS::StackName}'
       Family: aurora-postgresql12
-# Currently not changing parameters from default values
-# https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Reference.html#AuroraPostgreSQL.Reference.ParameterGroups
-#     Parameters:
+      Parameters:
+        temp_buffers: '8192'
+        work_mem: '256MB'
+        maintenance_work_mem: '256MB'
 
   ###############
   ### Secrets ###
